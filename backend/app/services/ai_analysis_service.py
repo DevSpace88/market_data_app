@@ -1,7 +1,8 @@
+# backend/app/services/ai_analysis_service.py
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate
-from langchain.tools import DuckDuckGoSearchTool
+from langchain_community.tools import DuckDuckGoSearchRun  # Geändert von DuckDuckGoSearchTool
 from datetime import datetime, timedelta
 from typing import Dict, List
 import asyncio
@@ -15,9 +16,9 @@ class MarketAIAnalysis:
     def __init__(self):
         self.llm = ChatOpenAI(
             temperature=0.7,
-            openai_api_key=settings.OPENAI_API_KEY
+            api_key=settings.OPENAI_API_KEY
         )
-        self.search_tool = DuckDuckGoSearchTool()
+        self.search_tool = DuckDuckGoSearchRun()  # Geändert
         self.cache = {}
         self.cache_duration = timedelta(minutes=15)
 
@@ -31,16 +32,18 @@ class MarketAIAnalysis:
 
         try:
             search_query = f"{symbol} stock market news analysis last 24 hours"
-            results = await self.search_tool.arun(search_query)
+            results = self.search_tool.run(search_query)  # Geändert von arun zu run
 
-            # Process results
+            # Process results - Angepasst für String-Output
+            news_items = results.split('\n')
             news = []
-            for item in results[:5]:  # Top 5 news items
-                news.append({
-                    'title': item,
-                    'source': 'News Search',
-                    'timestamp': datetime.now().isoformat()
-                })
+            for item in news_items[:5]:  # Top 5 news items
+                if item.strip():
+                    news.append({
+                        'title': item.strip(),
+                        'source': 'News Search',
+                        'timestamp': datetime.now().isoformat()
+                    })
 
             # Cache results
             self.cache[cache_key] = {
@@ -52,6 +55,8 @@ class MarketAIAnalysis:
         except Exception as e:
             print(f"Error fetching news: {e}")
             return []
+
+    # Rest der Klasse bleibt gleich...
 
     def _create_analysis_prompt(self, data: Dict) -> str:
         """Create comprehensive analysis prompt"""
