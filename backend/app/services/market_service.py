@@ -1,245 +1,281 @@
+from sqlalchemy.orm import Session
 import yfinance as yf
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import pandas_ta as ta
-from typing import Dict, List, Optional
-from sqlalchemy.orm import Session
-from ..models.database import MarketData, TechnicalIndicator, PatternDetection
-from ..config import get_settings
-
-settings = get_settings()
-
+from typing import Dict, List
 
 class MarketService:
     def __init__(self, db: Session):
         self.db = db
         self.cache = {}
-        self.cache_duration = timedelta(seconds=settings.CACHE_DURATION)
+        self.cache_duration = timedelta(minutes=5)
 
-    def _get_cache_key(self, symbol: str, timeframe: str) -> str:
-        return f"{symbol}_{timeframe}"
-
-    def _is_cache_valid(self, cache_key: str) -> bool:
-        if cache_key not in self.cache:
-            return False
-        return (datetime.now() - self.cache[cache_key]['timestamp']) < self.cache_duration
-
-    async def fetch_market_data(self, symbol: str, timeframe: str = "1d") -> Dict:
-        """Fetch market data with caching"""
-        cache_key = self._get_cache_key(symbol, timeframe)
-
-        if self._is_cache_valid(cache_key):
-            return self.cache[cache_key]['data']
-
+    async def fetch_market_data(self, symbol: str, timeframe: str = "1mo") -> List[Dict]:
+        cache_key = f"{symbol}_{timeframe}"
+        if cache_key in self.cache:
+            cached = self.cache[cache_key]
+            if datetime.now() - cached['timestamp'] < self.cache_duration:
+                return cached['data']
         try:
             stock = yf.Ticker(symbol)
-            df = stock.history(period=timeframe)
+            df = stock.history(period=timeframe, interval="1d")
+            if df.empty:
+                return None
 
-            # Convert to list of records
             data = []
             for idx, row in df.iterrows():
-                record = {
+                data.append({
                     'timestamp': idx.isoformat(),
                     'open': float(row['Open']),
                     'high': float(row['High']),
                     'low': float(row['Low']),
                     'close': float(row['Close']),
                     'volume': int(row['Volume'])
-                }
-                data.append(record)
+                })
 
-                # Save to database
-                db_record = MarketData(
-                    symbol=symbol,
-                    timestamp=idx,
-                    open_price=row['Open'],
-                    high_price=row['High'],
-                    low_price=row['Low'],
-                    close_price=row['Close'],
-                    volume=row['Volume']
-                )
-                self.db.add(db_record)
-
-            self.db.commit()
-
-            # Update cache
             self.cache[cache_key] = {
                 'data': data,
                 'timestamp': datetime.now()
             }
-
             return data
         except Exception as e:
-            print(f"Error fetching market data: {e}")
+            print(f"Market data fetch error: {e}")
             return None
 
     def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
-        """Calculate technical indicators from market data"""
         try:
-            # Convert to DataFrame
             df = pd.DataFrame(data)
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
-            df.set_index('timestamp', inplace=True)
+            if len(df) < 2:
+                return {}
 
-            # Calculate indicators
+            df['close'] = pd.to_numeric(df['close'])
             indicators = {}
 
-            # Trend
-            indicators['sma_20'] = ta.sma(df['close'], length=20).iloc[-1]
-            indicators['sma_50'] = ta.sma(df['close'], length=50).iloc[-1]
-            indicators['ema_20'] = ta.ema(df['close'], length=20).iloc[-1]
+            # Basic price indicators
+            indicators['current_price'] = float(df['close'].iloc[-1])
+            indicators['price_change'] = float(df['close'].pct_change().iloc[-1] * 100)
 
-            # Momentum
-            indicators['rsi'] = ta.rsi(df['close'], length=14).iloc[-1]
-            macd = ta.macd(df['close'])
-            indicators['macd'] = macd['MACD_12_26_9'].iloc[-1]
-            indicators['macd_signal'] = macd['MACDs_12_26_9'].iloc[-1]
+            # Moving averages
+            indicators['sma_20'] = float(df['close'].rolling(window=20).mean().iloc[-1])
+            indicators['sma_50'] = float(df['close'].rolling(window=50).mean().iloc[-1])
 
-            # Volatility
-            bb = ta.bbands(df['close'])
-            indicators['bb_upper'] = bb['BBU_20_2.0'].iloc[-1]
-            indicators['bb_lower'] = bb['BBL_20_2.0'].iloc[-1]
-            indicators['bb_middle'] = bb['BBM_20_2.0'].iloc[-1]
+            # RSI
+            delta = df['close'].diff()
+            gain = delta.where(delta > 0, 0).rolling(window=14).mean()
+            loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
+            rs = gain / loss
+            indicators['rsi'] = float(100 - (100 / (1 + rs)).iloc[-1])
 
-            # Store in database
-            for name, value in indicators.items():
-                if pd.notnull(value):
-                    record = TechnicalIndicator(
-                        market_data_id=data[-1]['timestamp'],
-                        indicator_type=name,
-                        value=float(value),
-                        timestamp=datetime.now()
-                    )
-                    self.db.add(record)
+            # MACD
+            exp12 = df['close'].ewm(span=12, adjust=False).mean()
+            exp26 = df['close'].ewm(span=26, adjust=False).mean()
+            macd = exp12 - exp26
+            signal = macd.ewm(span=9, adjust=False).mean()
+            indicators['macd'] = float(macd.iloc[-1])
+            indicators['macd_signal'] = float(signal.iloc[-1])
 
-            self.db.commit()
+            # Bollinger Bands
+            sma = df['close'].rolling(window=20).mean()
+            std = df['close'].rolling(window=20).std()
+            indicators['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
+            indicators['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
+            indicators['bb_middle'] = float(sma.iloc[-1])
 
-            return indicators
+            # Volume indicators
+            indicators['volume_sma'] = float(df['volume'].rolling(window=20).mean().iloc[-1])
+            indicators['volume_change'] = float(df['volume'].pct_change().iloc[-1] * 100)
+
+            return {k: v for k, v in indicators.items() if not pd.isna(v)}
+
         except Exception as e:
-            print(f"Error calculating indicators: {e}")
+            print(f"Indicator calculation error: {e}")
             return {}
 
     async def detect_patterns(self, data: List[Dict]) -> List[Dict]:
-        """Detect technical patterns in market data"""
         try:
             df = pd.DataFrame(data)
+            df['close'] = pd.to_numeric(df['close'])
             patterns = []
 
+            # Price trends
+            last_close = df['close'].iloc[-1]
+            last_5_closes = df['close'].tail(5)
+
+            # Moving averages
+            df['sma20'] = df['close'].rolling(window=20).mean()
+            df['sma50'] = df['close'].rolling(window=50).mean()
+
             # Trend patterns
-            if len(df) >= 50:
-                sma20 = ta.sma(df['close'], length=20)
-                sma50 = ta.sma(df['close'], length=50)
+            if df['sma20'].iloc[-1] > df['sma50'].iloc[-1] and df['sma20'].iloc[-2] <= df['sma50'].iloc[-2]:
+                patterns.append({
+                    'type': 'GOLDEN_CROSS',
+                    'confidence': 0.8,
+                    'description': 'Bullish pattern: Short-term MA crossed above long-term MA'
+                })
 
-                if (sma20.iloc[-1] > sma50.iloc[-1] and
-                        sma20.iloc[-2] <= sma50.iloc[-2]):
-                    patterns.append({
-                        'type': 'GOLDEN_CROSS',
-                        'confidence': 0.8,
-                        'description': 'Potential bullish trend reversal'
-                    })
-                elif (sma20.iloc[-1] < sma50.iloc[-1] and
-                      sma20.iloc[-2] >= sma50.iloc[-2]):
-                    patterns.append({
-                        'type': 'DEATH_CROSS',
-                        'confidence': 0.8,
-                        'description': 'Potential bearish trend reversal'
-                    })
+            # Support/Resistance levels
+            rolling_high = df['high'].rolling(window=20).max()
+            rolling_low = df['low'].rolling(window=20).min()
 
-            # Support/Resistance
-            last_price = df['close'].iloc[-1]
-            resistance = df['high'].rolling(20).max().iloc[-1]
-            support = df['low'].rolling(20).min().iloc[-1]
-
-            if abs(last_price - resistance) / resistance < 0.01:
+            if abs(last_close - rolling_high.iloc[-1]) / rolling_high.iloc[-1] < 0.01:
                 patterns.append({
                     'type': 'RESISTANCE_TEST',
-                    'confidence': 0.7,
-                    'description': f'Price testing resistance at {resistance:.2f}'
+                    'confidence': 0.75,
+                    'description': f'Testing resistance level at {rolling_high.iloc[-1]:.2f}'
                 })
 
-            if abs(last_price - support) / support < 0.01:
+            if abs(last_close - rolling_low.iloc[-1]) / rolling_low.iloc[-1] < 0.01:
                 patterns.append({
                     'type': 'SUPPORT_TEST',
-                    'confidence': 0.7,
-                    'description': f'Price testing support at {support:.2f}'
+                    'confidence': 0.75,
+                    'description': f'Testing support level at {rolling_low.iloc[-1]:.2f}'
                 })
 
-            # Store patterns
-            for pattern in patterns:
-                record = PatternDetection(
-                    symbol=data[0]['symbol'],
-                    pattern_type=pattern['type'],
-                    confidence=pattern['confidence'],
-                    description=pattern['description']
-                )
-                self.db.add(record)
-
-            self.db.commit()
+            # Price momentum
+            if all(last_5_closes.iloc[i] > last_5_closes.iloc[i - 1] for i in range(1, len(last_5_closes))):
+                patterns.append({
+                    'type': 'UPTREND',
+                    'confidence': 0.7,
+                    'description': 'Strong upward momentum detected'
+                })
 
             return patterns
+
         except Exception as e:
-            print(f"Error detecting patterns: {e}")
+            print(f"Pattern detection error: {e}")
             return []
 
-    def generate_signals(self, data: List[Dict], indicators: Dict) -> List[Dict]:
-        """Generate trading signals"""
-        signals = []
+    def generate_support_resistance_levels(self, data: List[Dict]) -> List[str]:
         try:
+            df = pd.DataFrame(data)
+            current_price = df['close'].iloc[-1]
+
+            # Calculate potential levels
+            pivot_high = df['high'].rolling(window=10).max().iloc[-1]
+            pivot_low = df['low'].rolling(window=10).min().iloc[-1]
+
+            # Calculate intermediate levels
+            r1 = pivot_high + (pivot_high - pivot_low) * 0.382
+            r2 = pivot_high + (pivot_high - pivot_low) * 0.618
+            s1 = pivot_low - (pivot_high - pivot_low) * 0.382
+            s2 = pivot_low - (pivot_high - pivot_low) * 0.618
+
+            levels = [
+                f"Strong resistance at ${pivot_high:.2f}",
+                f"Resistance level 1 at ${r1:.2f}",
+                f"Resistance level 2 at ${r2:.2f}",
+                f"Current price: ${current_price:.2f}",
+                f"Support level 1 at ${s1:.2f}",
+                f"Support level 2 at ${s2:.2f}",
+                f"Strong support at ${pivot_low:.2f}"
+            ]
+
+            return levels
+        except Exception as e:
+            print(f"Support/Resistance calculation error: {e}")
+            return []
+
+    def generate_short_term_outlook(self, data: List[Dict], indicators: Dict) -> str:
+        try:
+            current_price = data[-1]['close']
+            outlook_points = []
+
+            # RSI analysis
+            if 'rsi' in indicators:
+                rsi = indicators['rsi']
+                if rsi > 70:
+                    outlook_points.append("Overbought conditions suggest potential short-term pullback")
+                elif rsi < 30:
+                    outlook_points.append("Oversold conditions suggest potential short-term bounce")
+
+            # MACD analysis
+            if 'macd' in indicators and 'macd_signal' in indicators:
+                if indicators['macd'] > indicators['macd_signal']:
+                    outlook_points.append("MACD indicates bullish momentum")
+                else:
+                    outlook_points.append("MACD indicates bearish momentum")
+
+            # Bollinger Bands analysis
+            if all(k in indicators for k in ['bb_upper', 'bb_lower']):
+                if current_price > indicators['bb_upper']:
+                    outlook_points.append("Price above upper Bollinger Band suggests overextension")
+                elif current_price < indicators['bb_lower']:
+                    outlook_points.append("Price below lower Bollinger Band suggests oversold")
+
+            # Volume analysis
+            if 'volume_change' in indicators:
+                if indicators['volume_change'] > 20:
+                    outlook_points.append("Strong volume supports current price movement")
+                elif indicators['volume_change'] < -20:
+                    outlook_points.append("Declining volume suggests weakening trend")
+
+            return " ".join(outlook_points)
+
+        except Exception as e:
+            print(f"Short-term outlook generation error: {e}")
+            return "Unable to generate outlook due to insufficient data"
+
+    def generate_signals(self, data: List[Dict], indicators: Dict) -> List[Dict]:
+        try:
+            signals = []
+
             # RSI signals
-            if indicators.get('rsi'):
+            if 'rsi' in indicators:
                 rsi = indicators['rsi']
                 if rsi < 30:
                     signals.append({
                         'type': 'BUY',
                         'strength': 'STRONG',
                         'indicator': 'RSI',
-                        'reason': 'Oversold condition'
+                        'reason': f'Oversold condition (RSI: {rsi:.2f})'
                     })
                 elif rsi > 70:
                     signals.append({
                         'type': 'SELL',
                         'strength': 'STRONG',
                         'indicator': 'RSI',
-                        'reason': 'Overbought condition'
+                        'reason': f'Overbought condition (RSI: {rsi:.2f})'
                     })
 
             # MACD signals
             if all(k in indicators for k in ['macd', 'macd_signal']):
-                if (indicators['macd'] > indicators['macd_signal']):
+                macd = indicators['macd']
+                signal = indicators['macd_signal']
+                if macd > signal:
                     signals.append({
                         'type': 'BUY',
                         'strength': 'MEDIUM',
                         'indicator': 'MACD',
-                        'reason': 'Bullish crossover'
+                        'reason': f'Bullish crossover (MACD: {macd:.2f}, Signal: {signal:.2f})'
                     })
-                elif (indicators['macd'] < indicators['macd_signal']):
+                elif macd < signal:
                     signals.append({
                         'type': 'SELL',
                         'strength': 'MEDIUM',
                         'indicator': 'MACD',
-                        'reason': 'Bearish crossover'
+                        'reason': f'Bearish crossover (MACD: {macd:.2f}, Signal: {signal:.2f})'
                     })
 
             # Bollinger Bands signals
-            last_close = data[-1]['close']
-            if all(k in indicators for k in ['bb_upper', 'bb_lower']):
-                if last_close < indicators['bb_lower']:
+            if all(k in indicators for k in ['bb_upper', 'bb_lower']) and data:
+                current_price = data[-1]['close']
+                if current_price < indicators['bb_lower']:
                     signals.append({
                         'type': 'BUY',
                         'strength': 'MEDIUM',
-                        'indicator': 'BB',
-                        'reason': 'Price below lower band'
+                        'indicator': 'Bollinger Bands',
+                        'reason': f'Price below lower band (Price: {current_price:.2f}, Lower: {indicators["bb_lower"]:.2f})'
                     })
-                elif last_close > indicators['bb_upper']:
+                elif current_price > indicators['bb_upper']:
                     signals.append({
                         'type': 'SELL',
                         'strength': 'MEDIUM',
-                        'indicator': 'BB',
-                        'reason': 'Price above upper band'
+                        'indicator': 'Bollinger Bands',
+                        'reason': f'Price above upper band (Price: {current_price:.2f}, Upper: {indicators["bb_upper"]:.2f})'
                     })
 
             return signals
         except Exception as e:
-            print(f"Error generating signals: {e}")
+            print(f"Signal generation error: {e}")
             return []
