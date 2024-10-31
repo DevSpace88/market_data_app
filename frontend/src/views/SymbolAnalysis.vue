@@ -1,37 +1,3 @@
-<!--<template>-->
-<!--  <div class="space-y-6">-->
-<!--    <div class="flex items-center justify-between">-->
-<!--      <h2 class="text-3xl font-bold">{{ symbol }}</h2>-->
-<!--      <Badge>Loading...</Badge>-->
-<!--    </div>-->
-
-<!--    <Card>-->
-<!--      <CardHeader>-->
-<!--        <CardTitle>Market Data</CardTitle>-->
-<!--        <CardDescription>-->
-<!--          Analyzing {{ symbol }}...-->
-<!--        </CardDescription>-->
-<!--      </CardHeader>-->
-<!--      <CardContent>-->
-<!--        <p class="text-muted-foreground">-->
-<!--          Loading market data and analysis...-->
-<!--        </p>-->
-<!--      </CardContent>-->
-<!--    </Card>-->
-<!--  </div>-->
-<!--</template>-->
-
-<!--<script setup>-->
-<!--import { computed } from 'vue'-->
-<!--import { useRoute } from 'vue-router'-->
-<!--import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'-->
-<!--import { Badge } from '@/components/ui/badge'-->
-
-<!--const route = useRoute()-->
-<!--const symbol = computed(() => route.params.symbol)-->
-<!--</script>-->
-
-
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -45,6 +11,7 @@
           </Badge>
         </p>
       </div>
+      <ConnectionStatus />
       <TimeframeSelector v-model="timeframe" @change="handleTimeframeChange" />
     </div>
 
@@ -56,15 +23,24 @@
     <div v-else class="grid gap-6 grid-cols-1 lg:grid-cols-2">
       <!-- Price Chart -->
       <div class="lg:col-span-2">
+<!--        <PriceChart-->
+<!--          :data="marketData"-->
+<!--          :indicators="selectedIndicators"-->
+<!--        />-->
         <PriceChart
           :data="marketData"
-          :indicators="selectedIndicators"
+          :indicators="chartIndicators"
+          :indicator-data="formatIndicatorData"
         />
       </div>
 
       <!-- Technical Indicators -->
+<!--      <TechnicalIndicators-->
+<!--        :data="technicalIndicators"-->
+<!--        @indicator-toggle="handleIndicatorToggle"-->
+<!--      />-->
       <TechnicalIndicators
-        :data="technicalIndicators"
+        :data="technicalIndicators?.current"
         @indicator-toggle="handleIndicatorToggle"
       />
 
@@ -94,12 +70,13 @@ import TechnicalIndicators from '@/components/TechnicalIndicators.vue'
 import SignalList from '@/components/SignalList.vue'
 import PatternList from '@/components/PatternList.vue'
 import AIAnalysis from '@/components/AIAnalysis.vue'
+import ConnectionStatus from '@/components/ConnectionStatus.vue'
 
 const route = useRoute()
 const marketStore = useMarketStore()
 const timeframe = ref('1D')
-const selectedIndicators = ref(['SMA20', 'SMA50'])
-
+// const selectedIndicators = ref(['SMA20', 'SMA50'])
+const selectedIndicators = ref(['sma_20', 'sma_50', 'bb_upper', 'bb_lower', 'bb_middle'])
 const symbol = computed(() => route.params.symbol)
 const loading = computed(() => marketStore.loading)
 const marketData = computed(() => marketStore.marketData)
@@ -135,6 +112,21 @@ const fetchData = async () => {
 
 const formatNumber = (num) => {
   return num ? Number(num).toFixed(2) : '0.00'
+}
+
+// Format indicator data for chart
+const chartIndicators = computed(() => {
+  if (!technicalIndicators.value) return []
+
+  return selectedIndicators.value.filter(indicator =>
+    technicalIndicators.value[indicator] !== undefined)
+})
+
+const formatIndicatorData = (indicator) => {
+  return marketData.value.map(item => [
+    item.timestamp,
+    technicalIndicators.value[indicator]
+  ])
 }
 
 onMounted(() => {

@@ -112,3 +112,6 @@ coverage.xml
 market_analysis.db
 *.pickle
 cache/
+
+CodeExtractInquirer.py
+code_extract*

@@ -22,7 +22,7 @@ const props = defineProps({
 
 const emit = defineEmits(['change'])
 
-const timeframes = ['1D', '1W', '1M', '3M', 'YTD']
+const timeframes = ['1D', '1W', '1M', '3M', '5M', 'YTD']
 const selected = ref(props.modelValue || '1D')
 
 const handleSelect = (tf) => {
