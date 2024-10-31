@@ -18,8 +18,9 @@ class MarketService:
             '1W': ('7d', '15m'),
             '1M': ('1mo', '1h'),
             '3M': ('3mo', '1d'),
-            'YTD': ('ytd', '1d'),
+            '6M': ('6mo', '1d'),
             '1Y': ('1y', '1d'),
+            'YTD': ('ytd', '1d'),
         }
         return timeframe_map.get(timeframe, ('1mo', '1d'))
     async def fetch_market_data(self, symbol: str, period: str = "3mo", interval: str = "1d") -> List[Dict]:
@@ -239,6 +240,58 @@ class MarketService:
             print(f"Short-term outlook generation error: {e}")
             return "Unable to generate outlook due to insufficient data"
 
+    # def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
+    #     try:
+    #         df = pd.DataFrame(data)
+    #         if len(df) < 2:
+    #             return {}
+    #
+    #         df['close'] = pd.to_numeric(df['close'])
+    #         indicators = {}
+    #
+    #         # Aktuelle (neueste) Indikatoren
+    #         current = {}
+    #
+    #         # Moving Averages
+    #         if len(df) >= 20:
+    #             current['sma_20'] = float(df['close'].rolling(window=20).mean().iloc[-1])
+    #         if len(df) >= 50:
+    #             current['sma_50'] = float(df['close'].rolling(window=50).mean().iloc[-1])
+    #
+    #         # RSI
+    #         if len(df) >= 14:
+    #             delta = df['close'].diff()
+    #             gain = delta.where(delta > 0, 0).rolling(window=14).mean()
+    #             loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
+    #             rs = gain / loss
+    #             current['rsi'] = float(100 - (100 / (1 + rs)).iloc[-1])
+    #
+    #         # MACD
+    #         if len(df) >= 26:
+    #             exp12 = df['close'].ewm(span=12, adjust=False).mean()
+    #             exp26 = df['close'].ewm(span=26, adjust=False).mean()
+    #             macd = exp12 - exp26
+    #             signal = macd.ewm(span=9, adjust=False).mean()
+    #             current['macd'] = float(macd.iloc[-1])
+    #             current['macd_signal'] = float(signal.iloc[-1])
+    #
+    #         # Bollinger Bands
+    #         if len(df) >= 20:
+    #             sma = df['close'].rolling(window=20).mean()
+    #             std = df['close'].rolling(window=20).std()
+    #             current['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
+    #             current['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
+    #             current['bb_middle'] = float(sma.iloc[-1])
+    #
+    #         return {
+    #             'current': current,
+    #             'historical': {}  # Historische Daten falls benötigt
+    #         }
+    #
+    #     except Exception as e:
+    #         print(f"Indicator calculation error: {e}")
+    #         return {}
+
     def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
         try:
             df = pd.DataFrame(data)
@@ -247,15 +300,36 @@ class MarketService:
 
             df['close'] = pd.to_numeric(df['close'])
             indicators = {}
-
-            # Aktuelle (neueste) Indikatoren
             current = {}
+            historical = {'bb_upper': [], 'bb_middle': [], 'bb_lower': [], 'sma_20': [], 'sma_50': []}
 
-            # Moving Averages
+            # SMA Berechnungen
             if len(df) >= 20:
-                current['sma_20'] = float(df['close'].rolling(window=20).mean().iloc[-1])
+                sma20 = df['close'].rolling(window=20).mean()
+                current['sma_20'] = float(sma20.iloc[-1])
+                historical['sma_20'] = sma20.tolist()
+
             if len(df) >= 50:
-                current['sma_50'] = float(df['close'].rolling(window=50).mean().iloc[-1])
+                sma50 = df['close'].rolling(window=50).mean()
+                current['sma_50'] = float(sma50.iloc[-1])
+                historical['sma_50'] = sma50.tolist()
+
+            # Bollinger Bands
+            if len(df) >= 20:
+                sma = df['close'].rolling(window=20).mean()
+                std = df['close'].rolling(window=20).std()
+
+                bb_upper = sma + (std * 2)
+                bb_lower = sma - (std * 2)
+
+                current['bb_upper'] = float(bb_upper.iloc[-1])
+                current['bb_middle'] = float(sma.iloc[-1])
+                current['bb_lower'] = float(bb_lower.iloc[-1])
+
+                # Historische Werte speichern
+                historical['bb_upper'] = bb_upper.tolist()
+                historical['bb_middle'] = sma.tolist()
+                historical['bb_lower'] = bb_lower.tolist()
 
             # RSI
             if len(df) >= 14:
@@ -274,19 +348,17 @@ class MarketService:
                 current['macd'] = float(macd.iloc[-1])
                 current['macd_signal'] = float(signal.iloc[-1])
 
-            # Bollinger Bands
-            if len(df) >= 20:
-                sma = df['close'].rolling(window=20).mean()
-                std = df['close'].rolling(window=20).std()
-                current['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
-                current['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
-                current['bb_middle'] = float(sma.iloc[-1])
-
             return {
                 'current': current,
-                'historical': {}  # Historische Daten falls benötigt
+                'historical': {
+                    timestamp: {
+                        indicator: values[i]
+                        for indicator, values in historical.items()
+                        if i < len(values) and not pd.isna(values[i])
+                    }
+                    for i, timestamp in enumerate(df['timestamp'])
+                }
             }
-
         except Exception as e:
             print(f"Indicator calculation error: {e}")
             return {}

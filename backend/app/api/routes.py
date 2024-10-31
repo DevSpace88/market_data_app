@@ -45,7 +45,7 @@ async def get_market_data(
 @router.get("/market/analysis/{symbol}")
 async def get_market_analysis(
         symbol: str,
-        timeframe: str = Query("1M", regex="^(1D|1W|1M|3M|YTD|1Y)$"),
+        timeframe: str = Query("1M", regex="^(1D|1W|1M|3M|6M|YTD|1Y)$"),
         include_news: bool = Query(True),
         db: Session = Depends(get_db)
 ):
@@ -59,8 +59,9 @@ async def get_market_analysis(
             "1W": ("7d", "15m"),
             "1M": ("1mo", "1h"),
             "3M": ("3mo", "1d"),
-            "YTD": ("ytd", "1d"),
-            "1Y": ("1y", "1d")
+            "6M": ("6mo", "1d"),
+            "1Y": ("1y", "1d"),
+            "YTD": ("ytd", "1d")
         }
         period, interval = timeframe_map.get(timeframe, ("1mo", "1h"))
 
