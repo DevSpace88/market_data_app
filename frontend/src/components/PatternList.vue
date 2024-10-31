@@ -9,12 +9,14 @@
              class="p-3 rounded-lg border">
           <div class="flex justify-between items-start">
             <div>
-              <h4 class="font-medium">{{ pattern.type }}</h4>
+              <h4 class="font-medium">{{ formatPatternType(pattern.type) }}</h4>
               <p class="text-sm text-muted-foreground">
-                {{ pattern.description }}
+                {{ formatPatternDescription(pattern.description) }}
               </p>
             </div>
-            <Badge>{{ (pattern.confidence * 100).toFixed(0) }}%</Badge>
+            <Badge :variant="getConfidenceVariant(pattern.confidence)">
+              {{ pattern.confidence }}%
+            </Badge>
           </div>
         </div>
         <div v-if="!patterns.length" class="text-muted-foreground text-center py-4">
@@ -35,4 +37,23 @@ defineProps({
     default: () => []
   }
 })
+
+const formatPatternType = (type) => {
+  // Konvertiert z.B. "RESISTANCE_TEST" zu "Resistance Test"
+  return type
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
+const formatPatternDescription = (description) => {
+  // Entfernt die Confidence aus der Beschreibung, da wir sie separat anzeigen
+  return description.split('with')[0].trim()
+}
+
+const getConfidenceVariant = (confidence) => {
+  if (confidence >= 80) return 'default'
+  if (confidence >= 60) return 'secondary'
+  return 'outline'
+}
 </script>

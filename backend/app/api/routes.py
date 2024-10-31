@@ -5,8 +5,6 @@ from datetime import datetime
 import logging
 import json
 
-
-
 from ..models.database import get_db
 from ..services.market_service import MarketService
 from ..services.ai_analysis_service import MarketAIAnalysis
@@ -43,59 +41,6 @@ async def get_market_data(
         "data": data,
         "timestamp": datetime.now().isoformat()
     }
-
-
-# @router.get("/market/analysis/{symbol}")
-# async def get_market_analysis(
-#         symbol: str,
-#         timeframe: str = Query("1M", regex="^(1D|1W|1M|3M|YTD|1Y)$"),
-#         include_news: bool = Query(True),
-#         db: Session = Depends(get_db)
-# ):
-#     """Get comprehensive market analysis"""
-#     try:
-#         market_service = MarketService(db)
-#         ai_service = MarketAIAnalysis()
-#
-#         timeframe_map = {
-#             "1D": ("1d", "5m"),
-#             "1W": ("7d", "15m"),
-#             "1M": ("1mo", "1h"),
-#             "3M": ("3mo", "1d"),
-#             "YTD": ("ytd", "1d"),
-#             "1Y": ("1y", "1d")
-#         }
-#         period, interval = timeframe_map.get(timeframe, ("1mo", "1h"))
-#
-#         market_data = await market_service.fetch_market_data(symbol, period=period, interval=interval)
-#         if not market_data:
-#             raise HTTPException(status_code=404, detail=f"Market data not found for symbol {symbol}")
-#
-#         technical_data = market_service.calculate_technical_indicators(market_data)
-#         patterns = await market_service.detect_patterns(market_data)
-#         signals = market_service.generate_signals(market_data, technical_data)
-#
-#         ai_analysis = await ai_service.generate_market_summary(
-#             symbol=symbol,
-#             market_data=market_data,
-#             technical_data=technical_data,
-#             patterns=patterns
-#         )
-#
-#         return {
-#             "symbol": symbol,
-#             "timestamp": datetime.now().isoformat(),
-#             "market_data": market_data,
-#             "technical_indicators": technical_data,
-#             "patterns": patterns,
-#             "signals": signals,
-#             "ai_analysis": ai_analysis,
-#             "timeframe": timeframe
-#         }
-#
-#     except Exception as e:
-#         logger.error(f"Error in market analysis: {str(e)}", exc_info=True)
-#         raise HTTPException(status_code=500, detail=f"Error analyzing market data: {str(e)}")
 
 @router.get("/market/analysis/{symbol}")
 async def get_market_analysis(

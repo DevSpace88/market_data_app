@@ -11,38 +11,6 @@ class MarketService:
         self.cache = {}
         self.cache_duration = timedelta(minutes=5)
 
-    # async def fetch_market_data(self, symbol: str, timeframe: str = "1mo") -> List[Dict]:
-    #     cache_key = f"{symbol}_{timeframe}"
-    #     if cache_key in self.cache:
-    #         cached = self.cache[cache_key]
-    #         if datetime.now() - cached['timestamp'] < self.cache_duration:
-    #             return cached['data']
-    #     try:
-    #         stock = yf.Ticker(symbol)
-    #         df = stock.history(period=timeframe, interval="1d")
-    #         if df.empty:
-    #             return None
-    #
-    #         data = []
-    #         for idx, row in df.iterrows():
-    #             data.append({
-    #                 'timestamp': idx.isoformat(),
-    #                 'open': float(row['Open']),
-    #                 'high': float(row['High']),
-    #                 'low': float(row['Low']),
-    #                 'close': float(row['Close']),
-    #                 'volume': int(row['Volume'])
-    #             })
-    #
-    #         self.cache[cache_key] = {
-    #             'data': data,
-    #             'timestamp': datetime.now()
-    #         }
-    #         return data
-    #     except Exception as e:
-    #         print(f"Market data fetch error: {e}")
-    #         return None
-
     def _get_yf_timeframe(self, timeframe: str) -> tuple[str, str]:
         """Convert frontend timeframe to yfinance parameters"""
         timeframe_map = {
@@ -54,42 +22,6 @@ class MarketService:
             '1Y': ('1y', '1d'),
         }
         return timeframe_map.get(timeframe, ('1mo', '1d'))
-
-    # async def fetch_market_data(self, symbol: str, period: str = "1mo", interval: str = "1h") -> List[Dict]:
-    #     cache_key = f"{symbol}_{period}_{interval}"
-    #     if cache_key in self.cache:
-    #         cached = self.cache[cache_key]
-    #         if datetime.now() - cached['timestamp'] < self.cache_duration:
-    #             return cached['data']
-    #
-    #     try:
-    #         stock = yf.Ticker(symbol)
-    #         df = stock.history(period=period, interval=interval)
-    #
-    #         if df.empty:
-    #             return None
-    #
-    #         data = []
-    #         for idx, row in df.iterrows():
-    #             data.append({
-    #                 'timestamp': idx.isoformat(),
-    #                 'open': float(row['Open']),
-    #                 'high': float(row['High']),
-    #                 'low': float(row['Low']),
-    #                 'close': float(row['Close']),
-    #                 'volume': int(row['Volume'])
-    #             })
-    #
-    #         self.cache[cache_key] = {
-    #             'data': data,
-    #             'timestamp': datetime.now()
-    #         }
-    #         return data
-    #
-    #     except Exception as e:
-    #         print(f"Error fetching market data: {str(e)}")
-    #         return None
-
     async def fetch_market_data(self, symbol: str, period: str = "1mo", interval: str = "1d") -> List[Dict]:
         cache_key = f"{symbol}_{period}_{interval}"
         if cache_key in self.cache:
@@ -135,164 +67,107 @@ class MarketService:
             print(f"Error fetching market data: {str(e)}")
             return None
 
-    # def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
-    #     try:
-    #         df = pd.DataFrame(data)
-    #         if len(df) < 2:
-    #             return {}
-    #
-    #         df['close'] = pd.to_numeric(df['close'])
-    #         indicators = {}
-    #
-    #         # Basic price indicators
-    #         indicators['current_price'] = float(df['close'].iloc[-1])
-    #         indicators['price_change'] = float(df['close'].pct_change().iloc[-1] * 100)
-    #
-    #         # Moving averages
-    #         indicators['sma_20'] = float(df['close'].rolling(window=20).mean().iloc[-1])
-    #         indicators['sma_50'] = float(df['close'].rolling(window=50).mean().iloc[-1])
-    #
-    #         # RSI
-    #         delta = df['close'].diff()
-    #         gain = delta.where(delta > 0, 0).rolling(window=14).mean()
-    #         loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
-    #         rs = gain / loss
-    #         indicators['rsi'] = float(100 - (100 / (1 + rs)).iloc[-1])
-    #
-    #         # MACD
-    #         exp12 = df['close'].ewm(span=12, adjust=False).mean()
-    #         exp26 = df['close'].ewm(span=26, adjust=False).mean()
-    #         macd = exp12 - exp26
-    #         signal = macd.ewm(span=9, adjust=False).mean()
-    #         indicators['macd'] = float(macd.iloc[-1])
-    #         indicators['macd_signal'] = float(signal.iloc[-1])
-    #
-    #         # Bollinger Bands
-    #         sma = df['close'].rolling(window=20).mean()
-    #         std = df['close'].rolling(window=20).std()
-    #         indicators['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
-    #         indicators['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
-    #         indicators['bb_middle'] = float(sma.iloc[-1])
-    #
-    #         # Volume indicators
-    #         indicators['volume_sma'] = float(df['volume'].rolling(window=20).mean().iloc[-1])
-    #         indicators['volume_change'] = float(df['volume'].pct_change().iloc[-1] * 100)
-    #
-    #         return {k: v for k, v in indicators.items() if not pd.isna(v)}
-    #
-    #     except Exception as e:
-    #         print(f"Indicator calculation error: {e}")
-    #         return {}
-
-    # def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
-    #     try:
-    #         df = pd.DataFrame(data)
-    #         if len(df) < 2:
-    #             return {}
-    #
-    #         # Convert data
-    #         df['close'] = pd.to_numeric(df['close'])
-    #         df['timestamp'] = pd.to_datetime(df['timestamp'])
-    #         df.set_index('timestamp', inplace=True)
-    #
-    #         # Calculate indicators per timestamp
-    #         indicators_by_time = {}
-    #
-    #         # For each timestamp, calculate the indicators using data up to that point
-    #         for i in range(len(df)):
-    #             current_slice = df.iloc[:i + 1]
-    #             if len(current_slice) >= 20:  # Minimum data points needed
-    #                 timestamp = df.index[i].isoformat()
-    #                 indicators_by_time[timestamp] = {
-    #                     'sma_20': float(current_slice['close'].rolling(window=20).mean().iloc[-1]),
-    #                     'sma_50': float(current_slice['close'].rolling(window=50).mean().iloc[-1]) if len(
-    #                         current_slice) >= 50 else None,
-    #                     'bb_upper': float(current_slice['close'].rolling(window=20).std().iloc[-1] * 2 +
-    #                                       current_slice['close'].rolling(window=20).mean().iloc[-1]),
-    #                     'bb_lower': float(current_slice['close'].rolling(window=20).mean().iloc[-1] -
-    #                                       current_slice['close'].rolling(window=20).std().iloc[-1] * 2),
-    #                     'bb_middle': float(current_slice['close'].rolling(window=20).mean().iloc[-1])
-    #                 }
-    #
-    #                 # RSI
-    #                 delta = current_slice['close'].diff()
-    #                 gain = delta.where(delta > 0, 0).rolling(window=14).mean()
-    #                 loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
-    #                 rs = gain / loss
-    #                 indicators_by_time[timestamp]['rsi'] = float(100 - (100 / (1 + rs.iloc[-1])))
-    #
-    #                 # MACD
-    #                 exp12 = current_slice['close'].ewm(span=12, adjust=False).mean()
-    #                 exp26 = current_slice['close'].ewm(span=26, adjust=False).mean()
-    #                 macd = exp12 - exp26
-    #                 signal = macd.ewm(span=9, adjust=False).mean()
-    #                 indicators_by_time[timestamp]['macd'] = float(macd.iloc[-1])
-    #                 indicators_by_time[timestamp]['macd_signal'] = float(signal.iloc[-1])
-    #
-    #         # Return both latest indicators and historical values
-    #         latest_timestamp = df.index[-1].isoformat()
-    #         return {
-    #             'current': indicators_by_time.get(latest_timestamp, {}),
-    #             'historical': indicators_by_time
-    #         }
-    #
-    #     except Exception as e:
-    #         print(f"Indicator calculation error: {e}")
-    #         return {}
-
     async def detect_patterns(self, data: List[Dict]) -> List[Dict]:
         try:
             df = pd.DataFrame(data)
             df['close'] = pd.to_numeric(df['close'])
             patterns = []
 
-            # Price trends
-            last_close = df['close'].iloc[-1]
-            last_5_closes = df['close'].tail(5)
+            # Mehr dynamische Confidence-Berechnung
+            def calculate_confidence(strength: float, volume_impact: float) -> float:
+                base_confidence = min(abs(strength) * 100, 95)  # Max 95% confidence
+                volume_factor = min(volume_impact * 0.2, 0.2)  # Volume kann bis zu 20% zusätzlich beisteuern
+                return round(base_confidence + (base_confidence * volume_factor), 1)
 
-            # Moving averages
-            df['sma20'] = df['close'].rolling(window=20).mean()
-            df['sma50'] = df['close'].rolling(window=50).mean()
+            # Aktuelle Werte
+            current_price = df['close'].iloc[-1]
+            current_volume = df['volume'].iloc[-1]
+            avg_volume = df['volume'].mean()
+            volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1
 
-            # Trend patterns
-            if df['sma20'].iloc[-1] > df['sma50'].iloc[-1] and df['sma20'].iloc[-2] <= df['sma50'].iloc[-2]:
-                patterns.append({
-                    'type': 'GOLDEN_CROSS',
-                    'confidence': 0.8,
-                    'description': 'Bullish pattern: Short-term MA crossed above long-term MA'
-                })
+            # Trend Stärke berechnen
+            price_change = df['close'].pct_change()
+            trend_strength = abs(price_change.mean()) * 100
 
-            # Support/Resistance levels
-            rolling_high = df['high'].rolling(window=20).max()
-            rolling_low = df['low'].rolling(window=20).min()
+            # Support/Resistance Levels mit dynamischer Confidence
+            pivots = df['close'].rolling(window=20).std()
+            recent_pivot = pivots.iloc[-1]
+            price_volatility = recent_pivot / current_price
 
-            if abs(last_close - rolling_high.iloc[-1]) / rolling_high.iloc[-1] < 0.01:
-                patterns.append({
-                    'type': 'RESISTANCE_TEST',
-                    'confidence': 0.75,
-                    'description': f'Testing resistance level at {rolling_high.iloc[-1]:.2f}'
-                })
+            if len(df) >= 20:
+                # Support Test
+                recent_lows = df['low'].rolling(window=20).min()
+                if abs(current_price - recent_lows.iloc[-1]) / current_price < price_volatility:
+                    strength = abs(1 - (current_price / recent_lows.iloc[-1]))
+                    confidence = calculate_confidence(strength, volume_ratio)
+                    patterns.append({
+                        'type': 'Support',
+                        'confidence': confidence,
+                        'description': f'Price testing support at {recent_lows.iloc[-1]:.2f} with {confidence}% confidence'
+                    })
 
-            if abs(last_close - rolling_low.iloc[-1]) / rolling_low.iloc[-1] < 0.01:
-                patterns.append({
-                    'type': 'SUPPORT_TEST',
-                    'confidence': 0.75,
-                    'description': f'Testing support level at {rolling_low.iloc[-1]:.2f}'
-                })
+                # Resistance Test
+                recent_highs = df['high'].rolling(window=20).max()
+                if abs(current_price - recent_highs.iloc[-1]) / current_price < price_volatility:
+                    strength = abs(1 - (current_price / recent_highs.iloc[-1]))
+                    confidence = calculate_confidence(strength, volume_ratio)
+                    patterns.append({
+                        'type': 'Resistance',
+                        'confidence': confidence,
+                        'description': f'Price testing resistance at {recent_highs.iloc[-1]:.2f} with {confidence}% confidence'
+                    })
 
-            # Price momentum
-            if all(last_5_closes.iloc[i] > last_5_closes.iloc[i - 1] for i in range(1, len(last_5_closes))):
-                patterns.append({
-                    'type': 'UPTREND',
-                    'confidence': 0.7,
-                    'description': 'Strong upward momentum detected'
-                })
+            # Trend Patterns
+            if len(df) >= 5:
+                recent_trend = price_change.tail(5)
+
+                # Uptrend
+                if all(recent_trend > 0):
+                    confidence = calculate_confidence(trend_strength, volume_ratio)
+                    patterns.append({
+                        'type': 'Uptrend',
+                        'confidence': confidence,
+                        'description': f'Strong upward momentum with {confidence}% confidence'
+                    })
+
+                # Downtrend
+                elif all(recent_trend < 0):
+                    confidence = calculate_confidence(trend_strength, volume_ratio)
+                    patterns.append({
+                        'type': 'Downtrend',
+                        'confidence': confidence,
+                        'description': f'Strong downward momentum with {confidence}% confidence'
+                    })
+
+            # Breakout Detection
+            if len(df) >= 20:
+                upper_band = df['close'].rolling(20).mean() + (df['close'].rolling(20).std() * 2)
+                lower_band = df['close'].rolling(20).mean() - (df['close'].rolling(20).std() * 2)
+
+                if current_price > upper_band.iloc[-1]:
+                    strength = (current_price - upper_band.iloc[-1]) / upper_band.iloc[-1]
+                    confidence = calculate_confidence(strength, volume_ratio)
+                    patterns.append({
+                        'type': 'Breakout',
+                        'confidence': confidence,
+                        'description': f'Bullish breakout with {confidence}% confidence'
+                    })
+
+                elif current_price < lower_band.iloc[-1]:
+                    strength = (lower_band.iloc[-1] - current_price) / lower_band.iloc[-1]
+                    confidence = calculate_confidence(strength, volume_ratio)
+                    patterns.append({
+                        'type': 'Breakdown',
+                        'confidence': confidence,
+                        'description': f'Bearish breakdown with {confidence}% confidence'
+                    })
 
             return patterns
 
         except Exception as e:
-            print(f"Pattern detection error: {e}")
+            logger.error(f"Pattern detection error: {e}")
             return []
+
 
     def generate_support_resistance_levels(self, data: List[Dict]) -> List[str]:
         try:
@@ -364,71 +239,6 @@ class MarketService:
             print(f"Short-term outlook generation error: {e}")
             return "Unable to generate outlook due to insufficient data"
 
-    # def generate_signals(self, data: List[Dict], indicators: Dict) -> List[Dict]:
-    #     try:
-    #         signals = []
-    #
-    #         # RSI signals
-    #         if 'rsi' in indicators:
-    #             rsi = indicators['rsi']
-    #             if rsi < 30:
-    #                 signals.append({
-    #                     'type': 'BUY',
-    #                     'strength': 'STRONG',
-    #                     'indicator': 'RSI',
-    #                     'reason': f'Oversold condition (RSI: {rsi:.2f})'
-    #                 })
-    #             elif rsi > 70:
-    #                 signals.append({
-    #                     'type': 'SELL',
-    #                     'strength': 'STRONG',
-    #                     'indicator': 'RSI',
-    #                     'reason': f'Overbought condition (RSI: {rsi:.2f})'
-    #                 })
-    #
-    #         # MACD signals
-    #         if all(k in indicators for k in ['macd', 'macd_signal']):
-    #             macd = indicators['macd']
-    #             signal = indicators['macd_signal']
-    #             if macd > signal:
-    #                 signals.append({
-    #                     'type': 'BUY',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'MACD',
-    #                     'reason': f'Bullish crossover (MACD: {macd:.2f}, Signal: {signal:.2f})'
-    #                 })
-    #             elif macd < signal:
-    #                 signals.append({
-    #                     'type': 'SELL',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'MACD',
-    #                     'reason': f'Bearish crossover (MACD: {macd:.2f}, Signal: {signal:.2f})'
-    #                 })
-    #
-    #         # Bollinger Bands signals
-    #         if all(k in indicators for k in ['bb_upper', 'bb_lower']) and data:
-    #             current_price = data[-1]['close']
-    #             if current_price < indicators['bb_lower']:
-    #                 signals.append({
-    #                     'type': 'BUY',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'Bollinger Bands',
-    #                     'reason': f'Price below lower band (Price: {current_price:.2f}, Lower: {indicators["bb_lower"]:.2f})'
-    #                 })
-    #             elif current_price > indicators['bb_upper']:
-    #                 signals.append({
-    #                     'type': 'SELL',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'Bollinger Bands',
-    #                     'reason': f'Price above upper band (Price: {current_price:.2f}, Upper: {indicators["bb_upper"]:.2f})'
-    #                 })
-    #
-    #         return signals
-    #     except Exception as e:
-    #         print(f"Signal generation error: {e}")
-    #         return []
-
-
     def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
         try:
             df = pd.DataFrame(data)
@@ -481,14 +291,102 @@ class MarketService:
             print(f"Indicator calculation error: {e}")
             return {}
 
+    # def generate_signals(self, data: List[Dict], technical_data: Dict) -> List[Dict]:
+    #     signals = []
+    #     current = technical_data.get('current', {})
+    #
+    #     try:
+    #         latest_price = data[-1]['close'] if data else None
+    #
+    #         # RSI Signale
+    #         rsi = current.get('rsi')
+    #         if rsi is not None:
+    #             if rsi > 70:
+    #                 signals.append({
+    #                     'type': 'SELL',
+    #                     'strength': 'STRONG',
+    #                     'indicator': 'RSI',
+    #                     'reason': f'Overbought condition (RSI: {rsi:.1f})'
+    #                 })
+    #             elif rsi < 30:
+    #                 signals.append({
+    #                     'type': 'BUY',
+    #                     'strength': 'STRONG',
+    #                     'indicator': 'RSI',
+    #                     'reason': f'Oversold condition (RSI: {rsi:.1f})'
+    #                 })
+    #
+    #         # MACD Signale
+    #         macd = current.get('macd')
+    #         macd_signal = current.get('macd_signal')
+    #         if macd is not None and macd_signal is not None:
+    #             if macd > macd_signal:
+    #                 signals.append({
+    #                     'type': 'BUY',
+    #                     'strength': 'MEDIUM',
+    #                     'indicator': 'MACD',
+    #                     'reason': f'Bullish crossover (MACD: {macd:.2f}, Signal: {macd_signal:.2f})'
+    #                 })
+    #             elif macd < macd_signal:
+    #                 signals.append({
+    #                     'type': 'SELL',
+    #                     'strength': 'MEDIUM',
+    #                     'indicator': 'MACD',
+    #                     'reason': f'Bearish crossover (MACD: {macd:.2f}, Signal: {macd_signal:.2f})'
+    #                 })
+    #
+    #         # Bollinger Bands Signale
+    #         if latest_price and all(k in current for k in ['bb_upper', 'bb_lower']):
+    #             if latest_price > current['bb_upper']:
+    #                 signals.append({
+    #                     'type': 'SELL',
+    #                     'strength': 'MEDIUM',
+    #                     'indicator': 'Bollinger Bands',
+    #                     'reason': f'Price above upper band (Price: {latest_price:.2f}, Upper: {current["bb_upper"]:.2f})'
+    #                 })
+    #             elif latest_price < current['bb_lower']:
+    #                 signals.append({
+    #                     'type': 'BUY',
+    #                     'strength': 'MEDIUM',
+    #                     'indicator': 'Bollinger Bands',
+    #                     'reason': f'Price below lower band (Price: {latest_price:.2f}, Lower: {current["bb_lower"]:.2f})'
+    #                 })
+    #
+    #         # Moving Average Signale
+    #         if latest_price and 'sma_20' in current and 'sma_50' in current:
+    #             if current['sma_20'] > current['sma_50']:
+    #                 signals.append({
+    #                     'type': 'BUY',
+    #                     'strength': 'MEDIUM',
+    #                     'indicator': 'Moving Averages',
+    #                     'reason': 'Short-term MA above long-term MA (Golden Cross)'
+    #                 })
+    #             elif current['sma_20'] < current['sma_50']:
+    #                 signals.append({
+    #                     'type': 'SELL',
+    #                     'strength': 'MEDIUM',
+    #                     'indicator': 'Moving Averages',
+    #                     'reason': 'Short-term MA below long-term MA (Death Cross)'
+    #                 })
+    #
+    #         return signals
+    #
+    #     except Exception as e:
+    #         print(f"Signal generation error: {e}")
+    #         return []
+
     def generate_signals(self, data: List[Dict], technical_data: Dict) -> List[Dict]:
         signals = []
         current = technical_data.get('current', {})
+        latest_price = data[-1]['close'] if data else None
+        timeframe_context = {
+            'short': 'Short-term',
+            'medium': 'Medium-term',
+            'long': 'Long-term'
+        }
 
         try:
-            latest_price = data[-1]['close'] if data else None
-
-            # RSI Signale
+            # RSI Signale (Kurzfristig)
             rsi = current.get('rsi')
             if rsi is not None:
                 if rsi > 70:
@@ -496,17 +394,19 @@ class MarketService:
                         'type': 'SELL',
                         'strength': 'STRONG',
                         'indicator': 'RSI',
-                        'reason': f'Overbought condition (RSI: {rsi:.1f})'
+                        'reason': f'Overbought condition (RSI: {rsi:.1f})',
+                        'timeframe': 'short'
                     })
                 elif rsi < 30:
                     signals.append({
                         'type': 'BUY',
                         'strength': 'STRONG',
                         'indicator': 'RSI',
-                        'reason': f'Oversold condition (RSI: {rsi:.1f})'
+                        'reason': f'Oversold condition (RSI: {rsi:.1f})',
+                        'timeframe': 'short'
                     })
 
-            # MACD Signale
+            # MACD Signale (Mittelfristig)
             macd = current.get('macd')
             macd_signal = current.get('macd_signal')
             if macd is not None and macd_signal is not None:
@@ -515,52 +415,62 @@ class MarketService:
                         'type': 'BUY',
                         'strength': 'MEDIUM',
                         'indicator': 'MACD',
-                        'reason': f'Bullish crossover (MACD: {macd:.2f}, Signal: {macd_signal:.2f})'
+                        'reason': f'Bullish crossover (MACD: {macd:.2f}, Signal: {macd_signal:.2f})',
+                        'timeframe': 'medium'
                     })
                 elif macd < macd_signal:
                     signals.append({
                         'type': 'SELL',
                         'strength': 'MEDIUM',
                         'indicator': 'MACD',
-                        'reason': f'Bearish crossover (MACD: {macd:.2f}, Signal: {macd_signal:.2f})'
+                        'reason': f'Bearish crossover (MACD: {macd:.2f}, Signal: {macd_signal:.2f})',
+                        'timeframe': 'medium'
                     })
 
-            # Bollinger Bands Signale
+            # Bollinger Bands Signale (Kurzfristig)
             if latest_price and all(k in current for k in ['bb_upper', 'bb_lower']):
                 if latest_price > current['bb_upper']:
                     signals.append({
                         'type': 'SELL',
                         'strength': 'MEDIUM',
                         'indicator': 'Bollinger Bands',
-                        'reason': f'Price above upper band (Price: {latest_price:.2f}, Upper: {current["bb_upper"]:.2f})'
+                        'reason': f'Price above upper band (Price: {latest_price:.2f}, Upper: {current["bb_upper"]:.2f})',
+                        'timeframe': 'short'
                     })
                 elif latest_price < current['bb_lower']:
                     signals.append({
                         'type': 'BUY',
                         'strength': 'MEDIUM',
                         'indicator': 'Bollinger Bands',
-                        'reason': f'Price below lower band (Price: {latest_price:.2f}, Lower: {current["bb_lower"]:.2f})'
+                        'reason': f'Price below lower band (Price: {latest_price:.2f}, Lower: {current["bb_lower"]:.2f})',
+                        'timeframe': 'short'
                     })
 
-            # Moving Average Signale
+            # Moving Average Signale (Langfristig)
             if latest_price and 'sma_20' in current and 'sma_50' in current:
                 if current['sma_20'] > current['sma_50']:
                     signals.append({
                         'type': 'BUY',
                         'strength': 'MEDIUM',
                         'indicator': 'Moving Averages',
-                        'reason': 'Short-term MA above long-term MA (Golden Cross)'
+                        'reason': 'Short-term MA above long-term MA (Golden Cross)',
+                        'timeframe': 'long'
                     })
                 elif current['sma_20'] < current['sma_50']:
                     signals.append({
                         'type': 'SELL',
                         'strength': 'MEDIUM',
                         'indicator': 'Moving Averages',
-                        'reason': 'Short-term MA below long-term MA (Death Cross)'
+                        'reason': 'Short-term MA below long-term MA (Death Cross)',
+                        'timeframe': 'long'
                     })
+
+            # Füge Zeitrahmen-Kontext zu jedem Signal hinzu
+            for signal in signals:
+                signal['reason'] = f"{timeframe_context[signal['timeframe']]}: {signal['reason']}"
 
             return signals
 
         except Exception as e:
-            print(f"Signal generation error: {e}")
+            logger.error(f"Signal generation error: {e}")
             return []
