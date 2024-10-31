@@ -22,7 +22,7 @@ class MarketService:
             '1Y': ('1y', '1d'),
         }
         return timeframe_map.get(timeframe, ('1mo', '1d'))
-    async def fetch_market_data(self, symbol: str, period: str = "1mo", interval: str = "1d") -> List[Dict]:
+    async def fetch_market_data(self, symbol: str, period: str = "3mo", interval: str = "1d") -> List[Dict]:
         cache_key = f"{symbol}_{period}_{interval}"
         if cache_key in self.cache:
             cached = self.cache[cache_key]
@@ -290,90 +290,6 @@ class MarketService:
         except Exception as e:
             print(f"Indicator calculation error: {e}")
             return {}
-
-    # def generate_signals(self, data: List[Dict], technical_data: Dict) -> List[Dict]:
-    #     signals = []
-    #     current = technical_data.get('current', {})
-    #
-    #     try:
-    #         latest_price = data[-1]['close'] if data else None
-    #
-    #         # RSI Signale
-    #         rsi = current.get('rsi')
-    #         if rsi is not None:
-    #             if rsi > 70:
-    #                 signals.append({
-    #                     'type': 'SELL',
-    #                     'strength': 'STRONG',
-    #                     'indicator': 'RSI',
-    #                     'reason': f'Overbought condition (RSI: {rsi:.1f})'
-    #                 })
-    #             elif rsi < 30:
-    #                 signals.append({
-    #                     'type': 'BUY',
-    #                     'strength': 'STRONG',
-    #                     'indicator': 'RSI',
-    #                     'reason': f'Oversold condition (RSI: {rsi:.1f})'
-    #                 })
-    #
-    #         # MACD Signale
-    #         macd = current.get('macd')
-    #         macd_signal = current.get('macd_signal')
-    #         if macd is not None and macd_signal is not None:
-    #             if macd > macd_signal:
-    #                 signals.append({
-    #                     'type': 'BUY',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'MACD',
-    #                     'reason': f'Bullish crossover (MACD: {macd:.2f}, Signal: {macd_signal:.2f})'
-    #                 })
-    #             elif macd < macd_signal:
-    #                 signals.append({
-    #                     'type': 'SELL',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'MACD',
-    #                     'reason': f'Bearish crossover (MACD: {macd:.2f}, Signal: {macd_signal:.2f})'
-    #                 })
-    #
-    #         # Bollinger Bands Signale
-    #         if latest_price and all(k in current for k in ['bb_upper', 'bb_lower']):
-    #             if latest_price > current['bb_upper']:
-    #                 signals.append({
-    #                     'type': 'SELL',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'Bollinger Bands',
-    #                     'reason': f'Price above upper band (Price: {latest_price:.2f}, Upper: {current["bb_upper"]:.2f})'
-    #                 })
-    #             elif latest_price < current['bb_lower']:
-    #                 signals.append({
-    #                     'type': 'BUY',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'Bollinger Bands',
-    #                     'reason': f'Price below lower band (Price: {latest_price:.2f}, Lower: {current["bb_lower"]:.2f})'
-    #                 })
-    #
-    #         # Moving Average Signale
-    #         if latest_price and 'sma_20' in current and 'sma_50' in current:
-    #             if current['sma_20'] > current['sma_50']:
-    #                 signals.append({
-    #                     'type': 'BUY',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'Moving Averages',
-    #                     'reason': 'Short-term MA above long-term MA (Golden Cross)'
-    #                 })
-    #             elif current['sma_20'] < current['sma_50']:
-    #                 signals.append({
-    #                     'type': 'SELL',
-    #                     'strength': 'MEDIUM',
-    #                     'indicator': 'Moving Averages',
-    #                     'reason': 'Short-term MA below long-term MA (Death Cross)'
-    #                 })
-    #
-    #         return signals
-    #
-    #     except Exception as e:
-    #         print(f"Signal generation error: {e}")
-    #         return []
 
     def generate_signals(self, data: List[Dict], technical_data: Dict) -> List[Dict]:
         signals = []

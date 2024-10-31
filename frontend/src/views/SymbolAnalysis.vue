@@ -1,6 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-3xl font-bold">{{ symbol }}</h2>
@@ -19,38 +18,20 @@
       <Loader2 class="h-6 w-6 animate-spin mx-auto mb-2" />
       Analyzing market data...
     </div>
-
     <div v-else class="grid gap-6 grid-cols-1 lg:grid-cols-2">
-      <!-- Price Chart -->
       <div class="lg:col-span-2">
-<!--        <PriceChart-->
-<!--          :data="marketData"-->
-<!--          :indicators="selectedIndicators"-->
-<!--        />-->
         <PriceChart
           :data="marketData"
-          :indicators="chartIndicators"
-          :indicator-data="formatIndicatorData"
+          :indicators="activeIndicators"
+          :technical-data="technicalIndicators?.current"
         />
       </div>
-
-      <!-- Technical Indicators -->
-<!--      <TechnicalIndicators-->
-<!--        :data="technicalIndicators"-->
-<!--        @indicator-toggle="handleIndicatorToggle"-->
-<!--      />-->
       <TechnicalIndicators
         :data="technicalIndicators?.current"
         @indicator-toggle="handleIndicatorToggle"
       />
-
-      <!-- Trading Signals -->
       <SignalList :signals="signals" />
-
-      <!-- Technical Patterns -->
       <PatternList :patterns="patterns" />
-
-      <!-- AI Analysis -->
       <div class="lg:col-span-2">
         <AIAnalysis :analysis="aiAnalysis" />
       </div>
@@ -74,27 +55,40 @@ import ConnectionStatus from '@/components/ConnectionStatus.vue'
 
 const route = useRoute()
 const marketStore = useMarketStore()
-const timeframe = ref('1D')
-// const selectedIndicators = ref(['SMA20', 'SMA50'])
+const timeframe = ref('3M')
 const selectedIndicators = ref(['sma_20', 'sma_50', 'bb_upper', 'bb_lower', 'bb_middle'])
+
 const symbol = computed(() => route.params.symbol)
 const loading = computed(() => marketStore.loading)
-const marketData = computed(() => marketStore.marketData)
-const technicalIndicators = computed(() => marketStore.technicalIndicators)
-const patterns = computed(() => marketStore.patterns)
-const signals = computed(() => marketStore.signals)
+const marketData = computed(() => marketStore.marketData || [])
+const technicalIndicators = computed(() => marketStore.technicalIndicators || {})
+const patterns = computed(() => marketStore.patterns || [])
+const signals = computed(() => marketStore.signals || [])
 const aiAnalysis = computed(() => marketStore.aiAnalysis)
+
+// Neue Computed Property für aktive Indikatoren mit Werten
+const activeIndicators = computed(() => {
+  if (!technicalIndicators.value?.current) return []
+  return selectedIndicators.value.filter(indicator =>
+    technicalIndicators.value.current[indicator] !== undefined
+  )
+})
 
 const currentPrice = computed(() => {
   if (!marketData.value.length) return 0
   return marketData.value[marketData.value.length - 1].close
 })
 
-const priceChange = computed(() => marketStore.priceChange)
+const priceChange = computed(() => {
+  if (marketData.value.length < 2) return 0
+  const latest = marketData.value[marketData.value.length - 1]
+  const previous = marketData.value[marketData.value.length - 2]
+  return ((latest.close - previous.close) / previous.close) * 100
+})
 
-const handleTimeframeChange = (newTimeframe) => {
+const handleTimeframeChange = async (newTimeframe) => {
   timeframe.value = newTimeframe
-  fetchData()
+  await fetchData()
 }
 
 const handleIndicatorToggle = (indicator) => {
@@ -107,26 +101,12 @@ const handleIndicatorToggle = (indicator) => {
 }
 
 const fetchData = async () => {
-  await marketStore.fetchMarketAnalysis(symbol.value)
+  console.log(`Fetching data for ${symbol.value} with timeframe ${timeframe.value}`)
+  await marketStore.fetchMarketAnalysis(symbol.value, timeframe.value)
 }
 
 const formatNumber = (num) => {
   return num ? Number(num).toFixed(2) : '0.00'
-}
-
-// Format indicator data for chart
-const chartIndicators = computed(() => {
-  if (!technicalIndicators.value) return []
-
-  return selectedIndicators.value.filter(indicator =>
-    technicalIndicators.value[indicator] !== undefined)
-})
-
-const formatIndicatorData = (indicator) => {
-  return marketData.value.map(item => [
-    item.timestamp,
-    technicalIndicators.value[indicator]
-  ])
 }
 
 onMounted(() => {
