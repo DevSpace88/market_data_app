@@ -55,7 +55,7 @@ import ConnectionStatus from '@/components/ConnectionStatus.vue'
 
 const route = useRoute()
 const marketStore = useMarketStore()
-const timeframe = ref('1M')
+const timeframe = ref('1Y')
 const selectedIndicators = ref(['sma_20', 'sma_50', 'bb_upper', 'bb_lower', 'bb_middle'])
 
 const symbol = computed(() => route.params.symbol)

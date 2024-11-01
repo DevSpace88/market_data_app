@@ -56,8 +56,8 @@ async def get_market_analysis(
         # Verwende die bereits initialisierte AI-Service-Instanz mit Debug
         timeframe_map = {
             "1D": ("1d", "5m"),
-            "1W": ("7d", "15m"),
-            "1M": ("1mo", "1h"),
+            "1W": ("7d", "1h"),
+            "1M": ("1mo", "1d"),
             "3M": ("3mo", "1d"),
             "6M": ("6mo", "1d"),
             "1Y": ("1y", "1d"),

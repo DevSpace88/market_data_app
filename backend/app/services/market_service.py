@@ -4,6 +4,10 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List
+import logging
+
+# Logger Konfiguration
+logger = logging.getLogger(__name__)
 
 class MarketService:
     def __init__(self, db: Session):
@@ -12,10 +16,10 @@ class MarketService:
         self.cache_duration = timedelta(minutes=5)
 
     def _get_yf_timeframe(self, timeframe: str) -> tuple[str, str]:
-        """Convert frontend timeframe to yfinance parameters"""
+        """Konvertiere Frontend-Zeitrahmen zu yfinance-Parametern"""
         timeframe_map = {
             '1D': ('1d', '5m'),
-            '1W': ('7d', '15m'),
+            '1W': ('7d', '1h'),
             '1M': ('1mo', '1h'),
             '3M': ('3mo', '1d'),
             '6M': ('6mo', '1d'),
@@ -23,7 +27,9 @@ class MarketService:
             'YTD': ('ytd', '1d'),
         }
         return timeframe_map.get(timeframe, ('1mo', '1d'))
+
     async def fetch_market_data(self, symbol: str, period: str = "3mo", interval: str = "1d") -> List[Dict]:
+        """Daten von Yahoo Finance abrufen, wenn sie nicht im Cache vorhanden sind"""
         cache_key = f"{symbol}_{period}_{interval}"
         if cache_key in self.cache:
             cached = self.cache[cache_key]
@@ -47,128 +53,85 @@ class MarketService:
                     'Volume': 'sum'
                 }).dropna()
 
-            data = []
-            for idx, row in df.iterrows():
-                data.append({
+            data = [
+                {
                     'timestamp': idx.isoformat(),
                     'open': float(row['Open']),
                     'high': float(row['High']),
                     'low': float(row['Low']),
                     'close': float(row['Close']),
                     'volume': int(row['Volume'])
-                })
+                }
+                for idx, row in df.iterrows()
+            ]
 
-            self.cache[cache_key] = {
-                'data': data,
-                'timestamp': datetime.now()
-            }
+            self.cache[cache_key] = {'data': data, 'timestamp': datetime.now()}
             return data
 
         except Exception as e:
-            print(f"Error fetching market data: {str(e)}")
+            logger.error(f"Fehler beim Abrufen der Marktdaten: {str(e)}")
             return None
 
     async def detect_patterns(self, data: List[Dict]) -> List[Dict]:
+        """Erkennt Chart-Muster wie Doji, Hammer, Shooting Star und Engulfing Patterns"""
         try:
+            if not data or len(data) < 5:
+                return []
+
             df = pd.DataFrame(data)
             df['close'] = pd.to_numeric(df['close'])
             patterns = []
 
-            # Mehr dynamische Confidence-Berechnung
-            def calculate_confidence(strength: float, volume_impact: float) -> float:
-                base_confidence = min(abs(strength) * 100, 95)  # Max 95% confidence
-                volume_factor = min(volume_impact * 0.2, 0.2)  # Volume kann bis zu 20% zusätzlich beisteuern
-                return round(base_confidence + (base_confidence * volume_factor), 1)
+            # Definierte Muster
+            def is_doji(row):
+                body = abs(row['open'] - row['close'])
+                total_range = row['high'] - row['low']
+                return body <= 0.1 * total_range if total_range > 0 else False
 
-            # Aktuelle Werte
-            current_price = df['close'].iloc[-1]
-            current_volume = df['volume'].iloc[-1]
-            avg_volume = df['volume'].mean()
-            volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1
+            def is_hammer(row):
+                body = abs(row['open'] - row['close'])
+                lower_wick = min(row['open'], row['close']) - row['low']
+                upper_wick = row['high'] - max(row['open'], row['close'])
+                total_range = row['high'] - row['low']
+                return (body < 0.3 * total_range and lower_wick > 0.6 * total_range and upper_wick < 0.1 * total_range)
 
-            # Trend Stärke berechnen
-            price_change = df['close'].pct_change()
-            trend_strength = abs(price_change.mean()) * 100
+            def is_shooting_star(row):
+                body = abs(row['open'] - row['close'])
+                lower_wick = min(row['open'], row['close']) - row['low']
+                upper_wick = row['high'] - max(row['open'], row['close'])
+                total_range = row['high'] - row['low']
+                return (body < 0.3 * total_range and upper_wick > 0.6 * total_range and lower_wick < 0.1 * total_range)
 
-            # Support/Resistance Levels mit dynamischer Confidence
-            pivots = df['close'].rolling(window=20).std()
-            recent_pivot = pivots.iloc[-1]
-            price_volatility = recent_pivot / current_price
+            def is_engulfing(current, prev, bullish=True):
+                if bullish:
+                    return (prev['close'] < prev['open'] and current['close'] > current['open'] and
+                            current['open'] < prev['close'] and current['close'] > prev['open'])
+                else:
+                    return (prev['close'] > prev['open'] and current['close'] < current['open'] and
+                            current['open'] > prev['close'] and current['close'] < prev['open'])
 
-            if len(df) >= 20:
-                # Support Test
-                recent_lows = df['low'].rolling(window=20).min()
-                if abs(current_price - recent_lows.iloc[-1]) / current_price < price_volatility:
-                    strength = abs(1 - (current_price / recent_lows.iloc[-1]))
-                    confidence = calculate_confidence(strength, volume_ratio)
-                    patterns.append({
-                        'type': 'Support',
-                        'confidence': confidence,
-                        'description': f'Price testing support at {recent_lows.iloc[-1]:.2f} with {confidence}% confidence'
-                    })
+            lookback = min(len(df), max(5, len(df) // 10)) # Dynamische Lookback-Periode
+            for i in range(1, lookback):
+                current_row = df.iloc[-i]
+                prev_row = df.iloc[-i - 1] if i < len(df) - 1 else None
+                timestamp = current_row['timestamp'].isoformat() if isinstance(current_row['timestamp'], pd.Timestamp) else datetime.now().isoformat()
 
-                # Resistance Test
-                recent_highs = df['high'].rolling(window=20).max()
-                if abs(current_price - recent_highs.iloc[-1]) / current_price < price_volatility:
-                    strength = abs(1 - (current_price / recent_highs.iloc[-1]))
-                    confidence = calculate_confidence(strength, volume_ratio)
-                    patterns.append({
-                        'type': 'Resistance',
-                        'confidence': confidence,
-                        'description': f'Price testing resistance at {recent_highs.iloc[-1]:.2f} with {confidence}% confidence'
-                    })
+                if is_doji(current_row):
+                    patterns.append({'type': 'Doji', 'confidence': 75, 'description': 'Indecision, potential reversal', 'timestamp': timestamp})
+                if prev_row is not None and is_hammer(current_row):
+                    patterns.append({'type': 'Hammer', 'confidence': 80, 'description': 'Bullish reversal', 'timestamp': timestamp})
+                if prev_row is not None and is_shooting_star(current_row):
+                    patterns.append({'type': 'Shooting Star', 'confidence': 80, 'description': 'Bearish reversal', 'timestamp': timestamp})
+                if prev_row is not None and is_engulfing(current_row, prev_row, bullish=True):
+                    patterns.append({'type': 'Bullish Engulfing', 'confidence': 85, 'description': 'Strong bullish reversal', 'timestamp': timestamp})
+                if prev_row is not None and is_engulfing(current_row, prev_row, bullish=False):
+                    patterns.append({'type': 'Bearish Engulfing', 'confidence': 85, 'description': 'Strong bearish reversal', 'timestamp': timestamp})
 
-            # Trend Patterns
-            if len(df) >= 5:
-                recent_trend = price_change.tail(5)
-
-                # Uptrend
-                if all(recent_trend > 0):
-                    confidence = calculate_confidence(trend_strength, volume_ratio)
-                    patterns.append({
-                        'type': 'Uptrend',
-                        'confidence': confidence,
-                        'description': f'Strong upward momentum with {confidence}% confidence'
-                    })
-
-                # Downtrend
-                elif all(recent_trend < 0):
-                    confidence = calculate_confidence(trend_strength, volume_ratio)
-                    patterns.append({
-                        'type': 'Downtrend',
-                        'confidence': confidence,
-                        'description': f'Strong downward momentum with {confidence}% confidence'
-                    })
-
-            # Breakout Detection
-            if len(df) >= 20:
-                upper_band = df['close'].rolling(20).mean() + (df['close'].rolling(20).std() * 2)
-                lower_band = df['close'].rolling(20).mean() - (df['close'].rolling(20).std() * 2)
-
-                if current_price > upper_band.iloc[-1]:
-                    strength = (current_price - upper_band.iloc[-1]) / upper_band.iloc[-1]
-                    confidence = calculate_confidence(strength, volume_ratio)
-                    patterns.append({
-                        'type': 'Breakout',
-                        'confidence': confidence,
-                        'description': f'Bullish breakout with {confidence}% confidence'
-                    })
-
-                elif current_price < lower_band.iloc[-1]:
-                    strength = (lower_band.iloc[-1] - current_price) / lower_band.iloc[-1]
-                    confidence = calculate_confidence(strength, volume_ratio)
-                    patterns.append({
-                        'type': 'Breakdown',
-                        'confidence': confidence,
-                        'description': f'Bearish breakdown with {confidence}% confidence'
-                    })
-
-            return patterns
+            return sorted(patterns, key=lambda x: x['confidence'], reverse=True)
 
         except Exception as e:
             logger.error(f"Pattern detection error: {e}")
             return []
-
 
     def generate_support_resistance_levels(self, data: List[Dict]) -> List[str]:
         try:
@@ -240,58 +203,6 @@ class MarketService:
             print(f"Short-term outlook generation error: {e}")
             return "Unable to generate outlook due to insufficient data"
 
-    # def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
-    #     try:
-    #         df = pd.DataFrame(data)
-    #         if len(df) < 2:
-    #             return {}
-    #
-    #         df['close'] = pd.to_numeric(df['close'])
-    #         indicators = {}
-    #
-    #         # Aktuelle (neueste) Indikatoren
-    #         current = {}
-    #
-    #         # Moving Averages
-    #         if len(df) >= 20:
-    #             current['sma_20'] = float(df['close'].rolling(window=20).mean().iloc[-1])
-    #         if len(df) >= 50:
-    #             current['sma_50'] = float(df['close'].rolling(window=50).mean().iloc[-1])
-    #
-    #         # RSI
-    #         if len(df) >= 14:
-    #             delta = df['close'].diff()
-    #             gain = delta.where(delta > 0, 0).rolling(window=14).mean()
-    #             loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
-    #             rs = gain / loss
-    #             current['rsi'] = float(100 - (100 / (1 + rs)).iloc[-1])
-    #
-    #         # MACD
-    #         if len(df) >= 26:
-    #             exp12 = df['close'].ewm(span=12, adjust=False).mean()
-    #             exp26 = df['close'].ewm(span=26, adjust=False).mean()
-    #             macd = exp12 - exp26
-    #             signal = macd.ewm(span=9, adjust=False).mean()
-    #             current['macd'] = float(macd.iloc[-1])
-    #             current['macd_signal'] = float(signal.iloc[-1])
-    #
-    #         # Bollinger Bands
-    #         if len(df) >= 20:
-    #             sma = df['close'].rolling(window=20).mean()
-    #             std = df['close'].rolling(window=20).std()
-    #             current['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
-    #             current['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
-    #             current['bb_middle'] = float(sma.iloc[-1])
-    #
-    #         return {
-    #             'current': current,
-    #             'historical': {}  # Historische Daten falls benötigt
-    #         }
-    #
-    #     except Exception as e:
-    #         print(f"Indicator calculation error: {e}")
-    #         return {}
-
     def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
         try:
             df = pd.DataFrame(data)
@@ -299,65 +210,80 @@ class MarketService:
                 return {}
 
             df['close'] = pd.to_numeric(df['close'])
-            indicators = {}
             current = {}
-            historical = {'bb_upper': [], 'bb_middle': [], 'bb_lower': [], 'sma_20': [], 'sma_50': []}
+            historical = {}
 
-            # SMA Berechnungen
-            if len(df) >= 20:
-                sma20 = df['close'].rolling(window=20).mean()
-                current['sma_20'] = float(sma20.iloc[-1])
-                historical['sma_20'] = sma20.tolist()
+            # Angepasste Perioden für kürzere Zeiträume
+            periods = {
+                'very_short': max(5, len(df) // 10),  # Sehr kurze Periode
+                'short': max(10, len(df) // 5),  # Kurze Periode
+                'medium': max(20, len(df) // 3),  # Mittlere Periode
+                'long': max(50, len(df) // 2)  # Lange Periode
+            }
 
-            if len(df) >= 50:
-                sma50 = df['close'].rolling(window=50).mean()
-                current['sma_50'] = float(sma50.iloc[-1])
-                historical['sma_50'] = sma50.tolist()
+            # SMA Berechnung mit angepassten Perioden
+            if len(df) >= periods['medium']:
+                sma_short = df['close'].rolling(window=periods['medium']).mean()
+                current['sma_20'] = float(sma_short.iloc[-1])
 
-            # Bollinger Bands
-            if len(df) >= 20:
-                sma = df['close'].rolling(window=20).mean()
-                std = df['close'].rolling(window=20).std()
+            if len(df) >= periods['long']:
+                sma_long = df['close'].rolling(window=periods['long']).mean()
+                current['sma_50'] = float(sma_long.iloc[-1])
 
-                bb_upper = sma + (std * 2)
-                bb_lower = sma - (std * 2)
-
-                current['bb_upper'] = float(bb_upper.iloc[-1])
-                current['bb_middle'] = float(sma.iloc[-1])
-                current['bb_lower'] = float(bb_lower.iloc[-1])
-
-                # Historische Werte speichern
-                historical['bb_upper'] = bb_upper.tolist()
-                historical['bb_middle'] = sma.tolist()
-                historical['bb_lower'] = bb_lower.tolist()
-
-            # RSI
-            if len(df) >= 14:
+            # RSI mit angepasster Periode
+            if len(df) >= periods['short']:
                 delta = df['close'].diff()
-                gain = delta.where(delta > 0, 0).rolling(window=14).mean()
-                loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
+                gain = delta.where(delta > 0, 0).rolling(window=periods['short']).mean()
+                loss = -delta.where(delta < 0, 0).rolling(window=periods['short']).mean()
                 rs = gain / loss
                 current['rsi'] = float(100 - (100 / (1 + rs)).iloc[-1])
 
-            # MACD
-            if len(df) >= 26:
-                exp12 = df['close'].ewm(span=12, adjust=False).mean()
-                exp26 = df['close'].ewm(span=26, adjust=False).mean()
-                macd = exp12 - exp26
-                signal = macd.ewm(span=9, adjust=False).mean()
+            # MACD mit angepassten Perioden
+            if len(df) >= periods['long']:
+                exp_short = df['close'].ewm(span=periods['short'], adjust=False).mean()
+                exp_long = df['close'].ewm(span=periods['medium'], adjust=False).mean()
+                macd = exp_short - exp_long
+                signal = macd.ewm(span=periods['very_short'], adjust=False).mean()
                 current['macd'] = float(macd.iloc[-1])
                 current['macd_signal'] = float(signal.iloc[-1])
 
+            # # Bollinger Bands mit angepasster Periode
+            # if len(df) >= periods['medium']:
+            #     sma = df['close'].rolling(window=periods['medium']).mean()
+            #     std = df['close'].rolling(window=periods['medium']).std()
+            #     current['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
+            #     current['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
+            #     current['bb_middle'] = float(sma.iloc[-1])
+            #
+            # return {
+            #     'current': current,
+            #     'historical': {}
+            # }
+            # Bollinger Bands mit historischen Daten
+            if len(df) >= periods['medium']:
+                sma = df['close'].rolling(window=periods['medium']).mean()
+                std = df['close'].rolling(window=periods['medium']).std()
+
+                # Current values
+                current['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
+                current['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
+                current['bb_middle'] = float(sma.iloc[-1])
+
+                # Historical values
+                for idx, row in df.iterrows():
+                    timestamp = idx.isoformat() if isinstance(idx, pd.Timestamp) else str(idx)
+                    if timestamp not in historical:
+                        historical[timestamp] = {}
+
+                    i = df.index.get_loc(idx)
+                    if i >= periods['medium'] - 1:
+                        historical[timestamp]['bb_upper'] = float(sma.iloc[i] + (std.iloc[i] * 2))
+                        historical[timestamp]['bb_lower'] = float(sma.iloc[i] - (std.iloc[i] * 2))
+                        historical[timestamp]['bb_middle'] = float(sma.iloc[i])
+
             return {
                 'current': current,
-                'historical': {
-                    timestamp: {
-                        indicator: values[i]
-                        for indicator, values in historical.items()
-                        if i < len(values) and not pd.isna(values[i])
-                    }
-                    for i, timestamp in enumerate(df['timestamp'])
-                }
+                'historical': historical
             }
         except Exception as e:
             print(f"Indicator calculation error: {e}")

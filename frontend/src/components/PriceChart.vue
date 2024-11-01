@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-card rounded-lg shadow p-4">
+  <div class="bg-card rounded-lg shadow p-6">
     <div class="h-[700px]" ref="chartRef"></div>
   </div>
 </template>
@@ -7,6 +7,15 @@
 <script setup>
 import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
+
+const INDICATOR_NAMES = {
+  KLINE: 'Candlesticks',
+  MA20: '20 MA',
+  MA50: '50 MA',
+  BB_UPPER: 'BB Top',
+  BB_LOWER: 'BB Bot',
+  VOLUME: 'Volume'
+}
 
 const props = defineProps({
   data: {
@@ -26,14 +35,14 @@ const props = defineProps({
 const chartRef = ref(null)
 const chart = ref(null)
 const isInitialized = ref(false)
+
 const selectedIndicators = ref({
-  'K-Line': true,
-  'Volume': true,
-  'MA20': true,
-  'MA50': true,
-  'BB_UPPER': true,
-  'BB_MIDDLE': true,
-  'BB_LOWER': true
+  [INDICATOR_NAMES.KLINE]: true,
+  [INDICATOR_NAMES.MA20]: true,
+  [INDICATOR_NAMES.MA50]: true,
+  [INDICATOR_NAMES.BB_UPPER]: true,
+  [INDICATOR_NAMES.BB_LOWER]: true,
+  [INDICATOR_NAMES.VOLUME]: true
 })
 
 const formatVolume = (value) => {
@@ -44,13 +53,12 @@ const formatVolume = (value) => {
 
 const getIndicatorColor = (indicator) => {
   const colors = {
-    'K-Line': '#000000',
-    'MA20': '#2196F3',
-    'MA50': '#FF9800',
-    'BB_UPPER': '#4CAF50',
-    'BB_MIDDLE': '#9C27B0',
-    'BB_LOWER': '#4CAF50',
-    'Volume': '#888888'
+    [INDICATOR_NAMES.KLINE]: '#000000',
+    [INDICATOR_NAMES.MA20]: '#2196F3',
+    [INDICATOR_NAMES.MA50]: '#FF9800',
+    [INDICATOR_NAMES.BB_UPPER]: '#4CAF50',
+    [INDICATOR_NAMES.BB_LOWER]: '#4CAF50',
+    [INDICATOR_NAMES.VOLUME]: '#888888'
   }
   return colors[indicator] || '#000000'
 }
@@ -76,44 +84,58 @@ const handleLegendSelectChanged = async (params) => {
 
     if (chart.value && isInitialized.value) {
       await nextTick()
-      const option = chart.value.getOption()
-      const seriesIndex = option.series.findIndex(s => s.name === name)
-
-      if (seriesIndex !== -1) {
-        option.series[seriesIndex].show = selected[name]
-        chart.value.setOption(option, {
-          replaceMerge: ['series']
-        })
-      }
+      updateChart()
     }
   } catch (error) {
     console.error('Legend change error:', error)
   }
 }
 
+const getLegendData = () => [
+  {
+    name: INDICATOR_NAMES.KLINE,
+    icon: 'path://M0,0 L0,10 M2,3 L2,7 M4,2 L4,8'
+  },
+  {
+    name: INDICATOR_NAMES.MA20,
+    icon: 'line'
+  },
+  {
+    name: INDICATOR_NAMES.MA50,
+    icon: 'line'
+  },
+  {
+    name: INDICATOR_NAMES.BB_UPPER,
+    icon: 'line'
+  },
+  {
+    name: INDICATOR_NAMES.BB_LOWER,
+    icon: 'line'
+  },
+  {
+    name: INDICATOR_NAMES.VOLUME,
+    icon: 'roundRect'
+  }
+]
+
 const initChart = async () => {
   try {
     if (!chartRef.value) return
 
-    // Cleanup altes Chart
     if (chart.value) {
       chart.value.off('legendselectchanged', handleLegendSelectChanged)
       chart.value.dispose()
       chart.value = null
     }
 
-    // Warten auf DOM-Update
     await nextTick()
 
-    // Chart initialisieren
     chart.value = echarts.init(chartRef.value)
     chart.value.on('legendselectchanged', handleLegendSelectChanged)
 
-    // Warten auf Chart-Initialisierung
     await nextTick()
     isInitialized.value = true
 
-    // Erstes Update
     await updateChart()
 
   } catch (error) {
@@ -143,49 +165,109 @@ const updateChart = async () => {
     const ma20Data = calculateMAValues(props.data, 20)
     const ma50Data = calculateMAValues(props.data, 50)
 
-    const bbSeries = ['BB_UPPER', 'BB_MIDDLE', 'BB_LOWER'].map(band => ({
-      name: band,
-      type: 'line',
-      show: selectedIndicators.value[band],
-      data: props.data.map(item => {
-        const value = props.technicalData?.historical?.[item.timestamp]?.[band.toLowerCase()]
-        return value ? [
-          new Date(item.timestamp).getTime(),
-          value
-        ] : null
-      }).filter(item => item !== null),
-      smooth: true,
-      lineStyle: {
-        opacity: 0.8,
-        width: 2,
-        type: 'dashed',
-        color: getIndicatorColor(band)
-      },
-      symbol: 'none'
-    }))
+    // const bbSeries = [
+    //   { name: INDICATOR_NAMES.BB_UPPER, key: 'bb_upper' },
+    //   { name: INDICATOR_NAMES.BB_LOWER, key: 'bb_lower' }
+    // ].map(({ name, key }) => ({
+    //   name,
+    //   type: 'line',
+    //   data: props.data.map(item => {
+    //     const value = props.technicalData?.historical?.[item.timestamp]?.[key]
+    //     return value ? [
+    //       new Date(item.timestamp).getTime(),
+    //       value
+    //     ] : null
+    //   }).filter(item => item !== null),
+    //   show: selectedIndicators.value[name],
+    //   smooth: true,
+    //   lineStyle: {
+    //     opacity: 0.8,
+    //     width: 2,
+    //     type: 'dashed',
+    //     color: getIndicatorColor(name)
+    //   },
+    //   symbol: 'none'
+    // }))
+
+//   const bbSeries = ['BB_UPPER', 'BB_LOWER'].map(band => {
+//   const indicatorKey = band === 'BB_UPPER' ? 'bb_upper' : 'bb_lower'
+//   return {
+//     name: INDICATOR_NAMES[band],
+//     type: 'line',
+//     data: props.data.map(item => {
+//       // Versuche zuerst historical data, dann current
+//       let value = props.technicalData?.historical?.[item.timestamp]?.[indicatorKey]
+//       if (value === undefined) {
+//         value = props.technicalData?.current?.[indicatorKey]
+//       }
+//       return [
+//         new Date(item.timestamp).getTime(),
+//         value
+//       ]
+//     }).filter(item => item[1] !== undefined),
+//     smooth: true,
+//     lineStyle: {
+//       opacity: 0.8,
+//       width: 2,
+//       type: 'dashed',
+//       color: getIndicatorColor(band)
+//     },
+//     symbol: 'none',
+//     z: 1  // Legt die Bollinger Bands unter die Kerzen
+//   }
+// })
+
+
+    const bbSeries = ['BB_UPPER', 'BB_LOWER'].map(band => {
+  const indicatorKey = band === 'BB_UPPER' ? 'bb_upper' : 'bb_lower';
+  return {
+    name: INDICATOR_NAMES[band],
+    type: 'line',
+    data: props.data.map(item => {
+      let value = props.technicalData?.historical?.[item.timestamp]?.[indicatorKey];
+      if (value === undefined) {
+        value = props.technicalData?.current?.[indicatorKey];
+      }
+      console.log(`Bollinger Band (${band}) for timestamp ${item.timestamp}: `, value);
+      return [
+        new Date(item.timestamp).getTime(),
+        value
+      ];
+    }).filter(item => item[1] !== undefined),
+    smooth: true,
+    lineStyle: {
+      opacity: 0.8,
+      width: 2,
+      type: 'dashed',
+      color: getIndicatorColor(band)
+    },
+    symbol: 'none',
+    z: 1
+  };
+});
 
     const option = {
       animation: false,
       legend: {
         show: true,
-        top: 10,
-        left: 10,
-        itemGap: 20,
-        selectedMode: 'multiple',
-        selected: selectedIndicators.value,
-        data: [
-          { name: 'K-Line', icon: 'roundRect' },
-          { name: 'MA20', icon: 'line' },
-          { name: 'MA50', icon: 'line' },
-          { name: 'BB_UPPER', icon: 'line' },
-          { name: 'BB_MIDDLE', icon: 'line' },
-          { name: 'BB_LOWER', icon: 'line' },
-          { name: 'Volume', icon: 'roundRect' }
-        ],
+        top: '2%',
+        left: 'center',
+        itemGap: 25,
+        itemWidth: 25,
+        itemHeight: 14,
         textStyle: {
           fontSize: 12,
-          color: '#333'
-        }
+          color: '#333',
+          fontWeight: 500
+        },
+        selected: selectedIndicators.value,
+        data: getLegendData(),
+        emphasis: {
+          textStyle: {
+            fontWeight: 'bold'
+          }
+        },
+        selectedMode: true
       },
       tooltip: {
         trigger: 'axis',
@@ -194,15 +276,17 @@ const updateChart = async () => {
         }
       },
       grid: [{
-        left: '10%',
-        right: '3%',
+        left: '6%',
+        right: '6%',
         height: '70%',
-        top: '8%'
+        top: '12%',
+        containLabel: true
       }, {
-        left: '10%',
-        right: '3%',
+        left: '6%',
+        right: '6%',
         top: '82%',
-        height: '12%'
+        height: '12%',
+        containLabel: true
       }],
       xAxis: [{
         type: 'time',
@@ -210,7 +294,11 @@ const updateChart = async () => {
         axisLine: { onZero: false },
         splitLine: { show: false },
         min: 'dataMin',
-        max: 'dataMax'
+        max: 'dataMax',
+        axisLabel: {
+          formatter: value => new Date(value).toLocaleDateString(),
+          hideOverlap: true
+        }
       }, {
         type: 'time',
         gridIndex: 1,
@@ -222,26 +310,35 @@ const updateChart = async () => {
       }],
       yAxis: [{
         scale: true,
-        splitLine: { show: true },
-        position: 'left',
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: '#f0f0f0'
+          }
+        },
+        position: 'right',
         axisLabel: {
-          formatter: (value) => `$${value.toFixed(2)}`
+          formatter: value => `$${value.toFixed(2)}`,
+          inside: false,
+          margin: 10
         }
       }, {
         scale: true,
         gridIndex: 1,
         splitNumber: 2,
-        position: 'left',
+        position: 'right',
         axisLabel: {
-          formatter: formatVolume
+          formatter: formatVolume,
+          inside: false,
+          margin: 10
         }
       }],
       series: [
         {
-          name: 'K-Line',
+          name: INDICATOR_NAMES.KLINE,
           type: 'candlestick',
           data: priceData,
-          show: selectedIndicators.value['K-Line'],
+          show: selectedIndicators.value[INDICATOR_NAMES.KLINE],
           itemStyle: {
             color: '#ef5350',
             color0: '#26a69a',
@@ -250,39 +347,39 @@ const updateChart = async () => {
           }
         },
         {
-          name: 'MA20',
+          name: INDICATOR_NAMES.MA20,
           type: 'line',
           data: ma20Data,
-          show: selectedIndicators.value['MA20'],
+          show: selectedIndicators.value[INDICATOR_NAMES.MA20],
           smooth: true,
           lineStyle: {
             opacity: 0.8,
             width: 2,
-            color: getIndicatorColor('MA20')
+            color: getIndicatorColor(INDICATOR_NAMES.MA20)
           },
           symbol: 'none'
         },
         {
-          name: 'MA50',
+          name: INDICATOR_NAMES.MA50,
           type: 'line',
           data: ma50Data,
-          show: selectedIndicators.value['MA50'],
+          show: selectedIndicators.value[INDICATOR_NAMES.MA50],
           smooth: true,
           lineStyle: {
             opacity: 0.8,
             width: 2,
-            color: getIndicatorColor('MA50')
+            color: getIndicatorColor(INDICATOR_NAMES.MA50)
           },
           symbol: 'none'
         },
         ...bbSeries,
         {
-          name: 'Volume',
+          name: INDICATOR_NAMES.VOLUME,
           type: 'bar',
           xAxisIndex: 1,
           yAxisIndex: 1,
           data: volumeData,
-          show: selectedIndicators.value['Volume'],
+          show: selectedIndicators.value[INDICATOR_NAMES.VOLUME],
           itemStyle: {
             color: params => params.value[2] > 0 ? '#26a69a' : '#ef5350'
           }
@@ -301,7 +398,6 @@ const updateChart = async () => {
   }
 }
 
-// Verzögertes Resize-Handling
 let resizeTimeout
 const handleResize = () => {
   if (resizeTimeout) clearTimeout(resizeTimeout)
@@ -317,7 +413,6 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
 })
 
-// Watchers
 watch(() => props.data, async () => {
   if (isInitialized.value) {
     await updateChart()
