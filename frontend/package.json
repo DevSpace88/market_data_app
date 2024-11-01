@@ -17,6 +17,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^2.30.0",
     "echarts": "^5.4.3",
+    "lightweight-charts": "^4.2.1",
     "lucide-vue-next": "^0.292.0",
     "pinia": "^2.2.5",
     "radix-vue": "^1.9.8",
