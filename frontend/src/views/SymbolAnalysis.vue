@@ -10,7 +10,7 @@
           </Badge>
         </p>
       </div>
-      <ConnectionStatus />
+<!--      <ConnectionStatus />-->
       <TimeframeSelector v-model="timeframe" @change="handleTimeframeChange" />
     </div>
 
