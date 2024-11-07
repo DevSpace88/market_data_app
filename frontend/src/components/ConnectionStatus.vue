@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { useMarketStore } from '@/store/market'
+import { useMarketStore } from '@/stores/market'
 import { storeToRefs } from 'pinia'
 
 const store = useMarketStore()
@@ -33,8 +33,8 @@ const { isConnected } = storeToRefs(store)
 
 <!--<script setup>-->
 <!--import { storeToRefs } from 'pinia'-->
-<!--import { useMarketStore } from '@/store/market'-->
+<!--import { useMarketStore } from '@/stores/market'-->
 
-<!--const store = useMarketStore()-->
-<!--const { isConnected } = storeToRefs(store)-->
+<!--const stores = useMarketStore()-->
+<!--const { isConnected } = storeToRefs(stores)-->
 <!--</script>-->

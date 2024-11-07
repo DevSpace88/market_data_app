@@ -220,7 +220,7 @@
 import { ref, onMounted, watch, onUnmounted, computed } from 'vue'
 import { createChart } from 'lightweight-charts'
 import { Button } from '@/components/ui/button'
-import { useThemeStore } from '@/store/theme'  // Importiere den Theme-Store
+import { useThemeStore } from '@/stores/theme'  // Importiere den Theme-Store
 
 const props = defineProps({
   data: {

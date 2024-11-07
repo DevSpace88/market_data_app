@@ -42,7 +42,7 @@
 <script setup>
 import { ref, computed, onMounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import { useMarketStore } from '@/store/market'
+import { useMarketStore } from '@/stores/market'
 import { Loader2 } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import TimeframeSelector from '@/components/TimeframeSelector.vue'
