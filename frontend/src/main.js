@@ -1,12 +1,42 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import App from './App.vue'
-import router from './router'
+// import { createApp } from 'vue'
+// import { createPinia } from 'pinia'
+// import App from './App.vue'
+// import router from './router'
+// import './assets/styles/main.css'
+//
+// const app = createApp(App)
+// const pinia = createPinia()
+//
+// app.use(pinia)
+// app.use(router)
+// app.mount('#app')
+
+// main.js oder main.ts
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router'; // Falls Sie Vue Router verwenden
+import { createPinia } from 'pinia';
 import './assets/styles/main.css'
 
-const app = createApp(App)
-const pinia = createPinia()
+const app = createApp(App);
 
-app.use(pinia)
-app.use(router)
-app.mount('#app')
+// Definieren der v-click-outside-Direktive
+app.directive('click-outside', {
+  beforeMount(el, binding) {
+    el.clickOutsideHandler = (event) => {
+      // Prüfen, ob der Klick außerhalb des Elements erfolgt ist
+      if (!(el === event.target || el.contains(event.target))) {
+        binding.value(event); // Die übergebene Funktion ausführen
+      }
+    };
+    document.addEventListener('click', el.clickOutsideHandler);
+  },
+  unmounted(el) {
+    document.removeEventListener('click', el.clickOutsideHandler);
+    delete el.clickOutsideHandler;
+  }
+});
+
+app.use(router);
+app.use(createPinia());
+app.mount('#app');
