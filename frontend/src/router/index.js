@@ -1,59 +1,16 @@
-// // // frontend/src/router/index.js
-// // import { createRouter, createWebHistory } from 'vue-router'
-// //
-// // const routes = [
-// //   {
-// //     path: '/',
-// //     name: 'Dashboard',
-// //     component: () => import('@/views/MarketDashboard.vue')
-// //   },
-// //   {
-// //     path: '/symbol/:symbol',
-// //     name: 'SymbolAnalysis',
-// //     component: () => import('@/views/SymbolAnalysis.vue'),
-// //     props: true  // Wichtig für Parameter-Übergabe
-// //   },
-// //   // Fallback Route
-// //   {
-// //     path: '/:pathMatch(.*)*',
-// //     redirect: '/'
-// //   }
-// // ]
-// //
-// // const router = createRouter({
-// //   history: createWebHistory(),
-// //   routes
-// // })
-// //
-// // // Optional: Navigation Guards
-// // router.beforeEach((to, from, next) => {
-// //   // Beispiel: Validiere Symbol-Format
-// //   if (to.name === 'SymbolAnalysis' && to.params.symbol) {
-// //     const symbol = to.params.symbol.toUpperCase()
-// //     if (symbol !== to.params.symbol) {
-// //       return next({ name: 'SymbolAnalysis', params: { symbol } })
-// //     }
-// //   }
-// //   next()
-// // })
-// //
-// // export default router
-//
-//
 // // // src/router/index.js
 // // import { createRouter, createWebHistory } from 'vue-router'
 // // import { useAuthStore } from '@/stores/auth'
-// // import HomeView from '@/views/HomeView.vue'
 // // import LoginView from '@/views/LoginView.vue'
 // // import MarketDashboard from '@/views/MarketDashboard.vue'
+// // import SymbolAnalysis from '@/views/SymbolAnalysis.vue'
 // //
 // // const router = createRouter({
 // //   history: createWebHistory(import.meta.env.BASE_URL),
 // //   routes: [
 // //     {
 // //       path: '/',
-// //       name: 'home',
-// //       component: HomeView,
+// //       redirect: '/dashboard'  // Redirect zur Dashboard-Ansicht
 // //     },
 // //     {
 // //       path: '/login',
@@ -64,26 +21,51 @@
 // //     {
 // //       path: '/dashboard',
 // //       name: 'dashboard',
-// //       component: MarketDashboard,  // Verwendet MarketDashboard statt DashboardView
+// //       component: MarketDashboard,
+// //       meta: { requiresAuth: true }
+// //     },
+// //     {
+// //       path: '/symbol/:symbol',
+// //       name: 'symbol-analysis',
+// //       component: SymbolAnalysis,
 // //       meta: { requiresAuth: true }
 // //     }
 // //   ]
 // // })
+// //
+// // router.beforeEach(async (to, from, next) => {
+// //   const authStore = useAuthStore()
+// //
+// //   if (authStore.token && !authStore.user) {
+// //     await authStore.checkAuth()
+// //   }
+// //
+// //   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+// //     next({ name: 'login', query: { redirect: to.fullPath } })
+// //     return
+// //   }
+// //
+// //   next()
+// // })
+// //
+// // export default router
 //
+//
+//
+// // src/router/index.js
 // import { createRouter, createWebHistory } from 'vue-router'
 // import { useAuthStore } from '@/stores/auth'
-// import HomeView from '@/views/HomeView.vue'
 // import LoginView from '@/views/LoginView.vue'
 // import MarketDashboard from '@/views/MarketDashboard.vue'
-// import SymbolAnalysis from '@/views/SymbolAnalysis.vue'  // Deine existierende Komponente
+// import SymbolAnalysis from '@/views/SymbolAnalysis.vue'
+// import NotFound from '@/views/NotFound.vue'
 //
 // const router = createRouter({
 //   history: createWebHistory(import.meta.env.BASE_URL),
 //   routes: [
 //     {
 //       path: '/',
-//       name: 'home',
-//       component: HomeView,
+//       redirect: '/dashboard'
 //     },
 //     {
 //       path: '/login',
@@ -98,32 +80,30 @@
 //       meta: { requiresAuth: true }
 //     },
 //     {
-//       path: '/symbol/:symbol',  // oder welchen Pfad du bevorzugst
+//       path: '/symbol/:symbol',
 //       name: 'symbol-analysis',
 //       component: SymbolAnalysis,
 //       meta: { requiresAuth: true }
+//     },
+//     // 404 Route - muss immer als letzte Route definiert sein
+//     {
+//       path: '/:pathMatch(.*)*',
+//       name: 'not-found',
+//       component: NotFound,
+//       meta: { hideLayout: true }  // Kein Header auf 404-Seite
 //     }
 //   ]
 // })
 //
-// // Navigation Guard
 // router.beforeEach(async (to, from, next) => {
 //   const authStore = useAuthStore()
 //
-//   // Überprüfe Auth-Status wenn ein Token existiert
 //   if (authStore.token && !authStore.user) {
 //     await authStore.checkAuth()
 //   }
 //
-//   // Handle protected routes
 //   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
 //     next({ name: 'login', query: { redirect: to.fullPath } })
-//     return
-//   }
-//
-//   // Handle public only routes (like login)
-//   if (to.meta.public && authStore.isAuthenticated) {
-//     next({ name: 'dashboard' })
 //     return
 //   }
 //
@@ -133,19 +113,52 @@
 // export default router
 
 
+
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import axios from 'axios'
 import LoginView from '@/views/LoginView.vue'
 import MarketDashboard from '@/views/MarketDashboard.vue'
 import SymbolAnalysis from '@/views/SymbolAnalysis.vue'
+import NotFound from '@/views/NotFound.vue'
+
+// Component für "Symbol nicht gefunden"
+const SymbolNotFound = {
+  template: `
+    <div class="container mx-auto p-4">
+      <div class="rounded-lg border bg-card p-8 text-center space-y-6">
+        <h1 class="text-3xl font-bold">Symbol nicht gefunden</h1>
+        <p class="text-xl text-muted-foreground">
+          Das Symbol "{{ $route.params.symbol }}" konnte nicht gefunden werden.
+        </p>
+        <div class="space-y-2">
+          <p class="text-muted-foreground">
+            Mögliche Gründe:
+          </p>
+          <ul class="text-sm text-muted-foreground">
+            <li>Das Symbol existiert nicht</li>
+            <li>Tippfehler im Symbol</li>
+            <li>Das Symbol wird nicht mehr gehandelt</li>
+          </ul>
+        </div>
+        <div class="space-x-4">
+          <button class="px-4 py-2 bg-primary text-primary-foreground rounded-md" 
+                  @click="$router.push('/dashboard')">
+            Zurück zum Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  `
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      redirect: '/dashboard'  // Redirect zur Dashboard-Ansicht
+      redirect: '/dashboard'
     },
     {
       path: '/login',
@@ -163,11 +176,41 @@ const router = createRouter({
       path: '/symbol/:symbol',
       name: 'symbol-analysis',
       component: SymbolAnalysis,
+      meta: { requiresAuth: true },
+      beforeEnter: async (to, from, next) => {
+        try {
+          const token = localStorage.getItem('token')
+          const response = await axios.get(`http://localhost:8000/api/v1/market/data/${to.params.symbol}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          if (response.data) {
+            next()
+          } else {
+            next({ name: 'symbol-not-found', params: { symbol: to.params.symbol } })
+          }
+        } catch (error) {
+          next({ name: 'symbol-not-found', params: { symbol: to.params.symbol } })
+        }
+      }
+    },
+    {
+      path: '/symbol-not-found/:symbol',
+      name: 'symbol-not-found',
+      component: SymbolNotFound,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFound,
+      meta: { hideLayout: true }
     }
   ]
 })
 
+// Auth Navigation Guard
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 

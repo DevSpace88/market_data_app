@@ -10,6 +10,8 @@ from ...services.market_service import MarketService
 from ...services.ai_analysis_service import MarketAIAnalysis
 from ...auth import get_current_active_user, User
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 market_ai = MarketAIAnalysis()
 market_ai.set_debug(True)
@@ -85,4 +87,34 @@ async def get_market_analysis(
         logging.error(f"Error in market analysis: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error analyzing market data: {str(e)}")
 
+# kp ob das noch nötig ist?
+@router.get("/validate/{symbol}")
+async def validate_symbol(
+        symbol: str,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_active_user)
+):
+    """Validiere ein Symbol bevor die volle Analyse startet"""
+    market_service = MarketService(db)
+    data = await market_service.fetch_market_data(symbol)
 
+    if data is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Symbol {symbol} not found or data unavailable"
+        )
+
+    return {"valid": True, "symbol": symbol}
+
+@router.get("/search")
+async def search_stocks(
+    query: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Suche nach Stocks basierend auf Symbol oder Name"""
+    logger.debug(f"Search request for query: {query}")
+    market_service = MarketService(db)
+    results = await market_service.search_stocks(query)
+    logger.debug(f"Found {len(results)} results for {query}")
+    return results

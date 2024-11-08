@@ -1,18 +1,24 @@
 from sqlalchemy.orm import Session
 import yfinance as yf
 import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List
 import logging
+import requests
 
 # Logger Konfiguration
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 class MarketService:
     def __init__(self, db: Session):
         self.db = db
-        self.cache = {}
+        # Neue Cache-Struktur
+        self.cache = {
+            'market_data': {},
+            'search': {},
+            'analysis': {}
+        }
         self.cache_duration = timedelta(minutes=5)
 
     def _get_yf_timeframe(self, timeframe: str) -> tuple[str, str]:
@@ -32,7 +38,7 @@ class MarketService:
         """Daten von Yahoo Finance abrufen, wenn sie nicht im Cache vorhanden sind"""
         cache_key = f"{symbol}_{period}_{interval}"
         if cache_key in self.cache:
-            cached = self.cache[cache_key]
+            cached = self.cache['market_data'][cache_key]
             if datetime.now() - cached['timestamp'] < self.cache_duration:
                 return cached['data']
 
@@ -65,7 +71,7 @@ class MarketService:
                 for idx, row in df.iterrows()
             ]
 
-            self.cache[cache_key] = {'data': data, 'timestamp': datetime.now()}
+            self.cache['market_data'][cache_key] = {'data': data, 'timestamp': datetime.now()}
             return data
 
         except Exception as e:
@@ -202,92 +208,6 @@ class MarketService:
         except Exception as e:
             print(f"Short-term outlook generation error: {e}")
             return "Unable to generate outlook due to insufficient data"
-
-    # def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
-    #     try:
-    #         df = pd.DataFrame(data)
-    #         if len(df) < 2:
-    #             return {}
-    #
-    #         df['close'] = pd.to_numeric(df['close'])
-    #         current = {}
-    #         historical = {}
-    #
-    #         # Angepasste Perioden für kürzere Zeiträume
-    #         periods = {
-    #             'very_short': max(5, len(df) // 10),  # Sehr kurze Periode
-    #             'short': max(10, len(df) // 5),  # Kurze Periode
-    #             'medium': max(20, len(df) // 3),  # Mittlere Periode
-    #             'long': max(50, len(df) // 2)  # Lange Periode
-    #         }
-    #
-    #         # SMA Berechnung mit angepassten Perioden
-    #         if len(df) >= periods['medium']:
-    #             sma_short = df['close'].rolling(window=periods['medium']).mean()
-    #             current['sma_20'] = float(sma_short.iloc[-1])
-    #
-    #         if len(df) >= periods['long']:
-    #             sma_long = df['close'].rolling(window=periods['long']).mean()
-    #             current['sma_50'] = float(sma_long.iloc[-1])
-    #
-    #         # RSI mit angepasster Periode
-    #         if len(df) >= periods['short']:
-    #             delta = df['close'].diff()
-    #             gain = delta.where(delta > 0, 0).rolling(window=periods['short']).mean()
-    #             loss = -delta.where(delta < 0, 0).rolling(window=periods['short']).mean()
-    #             rs = gain / loss
-    #             current['rsi'] = float(100 - (100 / (1 + rs)).iloc[-1])
-    #
-    #         # MACD mit angepassten Perioden
-    #         if len(df) >= periods['long']:
-    #             exp_short = df['close'].ewm(span=periods['short'], adjust=False).mean()
-    #             exp_long = df['close'].ewm(span=periods['medium'], adjust=False).mean()
-    #             macd = exp_short - exp_long
-    #             signal = macd.ewm(span=periods['very_short'], adjust=False).mean()
-    #             current['macd'] = float(macd.iloc[-1])
-    #             current['macd_signal'] = float(signal.iloc[-1])
-    #
-    #         # # Bollinger Bands mit angepasster Periode
-    #         # if len(df) >= periods['medium']:
-    #         #     sma = df['close'].rolling(window=periods['medium']).mean()
-    #         #     std = df['close'].rolling(window=periods['medium']).std()
-    #         #     current['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
-    #         #     current['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
-    #         #     current['bb_middle'] = float(sma.iloc[-1])
-    #         #
-    #         # return {
-    #         #     'current': current,
-    #         #     'historical': {}
-    #         # }
-    #         # Bollinger Bands mit historischen Daten
-    #         if len(df) >= periods['medium']:
-    #             sma = df['close'].rolling(window=periods['medium']).mean()
-    #             std = df['close'].rolling(window=periods['medium']).std()
-    #
-    #             # Current values
-    #             current['bb_upper'] = float(sma.iloc[-1] + (std.iloc[-1] * 2))
-    #             current['bb_lower'] = float(sma.iloc[-1] - (std.iloc[-1] * 2))
-    #             current['bb_middle'] = float(sma.iloc[-1])
-    #
-    #             # Historical values
-    #             for idx, row in df.iterrows():
-    #                 timestamp = idx.isoformat() if isinstance(idx, pd.Timestamp) else str(idx)
-    #                 if timestamp not in historical:
-    #                     historical[timestamp] = {}
-    #
-    #                 i = df.index.get_loc(idx)
-    #                 if i >= periods['medium'] - 1:
-    #                     historical[timestamp]['bb_upper'] = float(sma.iloc[i] + (std.iloc[i] * 2))
-    #                     historical[timestamp]['bb_lower'] = float(sma.iloc[i] - (std.iloc[i] * 2))
-    #                     historical[timestamp]['bb_middle'] = float(sma.iloc[i])
-    #
-    #         return {
-    #             'current': current,
-    #             'historical': historical
-    #         }
-    #     except Exception as e:
-    #         print(f"Indicator calculation error: {e}")
-    #         return {}
 
     def calculate_technical_indicators(self, data: List[Dict]) -> Dict:
         try:
@@ -439,4 +359,34 @@ class MarketService:
 
         except Exception as e:
             logger.error(f"Signal generation error: {e}")
+            return []
+
+    async def search_stocks(self, query: str) -> List[Dict]:
+        """Suche nach Stocks mit Cache"""
+        try:
+            response = requests.get(
+                "https://query2.finance.yahoo.com/v1/finance/search",
+                params={
+                    'q': query,
+                    'quotesCount': 5,
+                    'newsCount': 0
+                },
+                headers={
+                    'User-Agent': 'Mozilla/5.0'  # Manchmal hilft ein User-Agent
+                }
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                return [{
+                    'symbol': quote.get('symbol'),
+                    'name': quote.get('shortname', ''),
+                    'exchange': quote.get('exchange', '')
+                } for quote in data.get('quotes', [])
+                    if quote.get('symbol')]
+
+            return []
+
+        except Exception as e:
+            logger.error(f"Search error: {str(e)}")
             return []
