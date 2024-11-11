@@ -10,8 +10,8 @@
           </Badge>
         </p>
       </div>
-      <!--      <ConnectionStatus />-->
-      <TimeframeSelector v-model="timeframe" @change="handleTimeframeChange"/>
+<!--      <ConnectionStatus />-->
+      <TimeframeSelector v-model="timeframe" @change="handleTimeframeChange" />
     </div>
 
     <div v-if="loading" class="py-8 text-center text-muted-foreground">
