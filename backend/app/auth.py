@@ -435,6 +435,20 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+async def get_current_admin_user(
+    current_user: User = Depends(get_current_active_user)
+):
+    """Überprüft ob der User ein Admin ist"""
+    logger.debug(f"Checking if user {current_user.username} is admin")
+    if not current_user.is_admin:
+        logger.warning(f"User {current_user.username} tried to access admin area")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    logger.debug(f"Admin access granted for {current_user.username}")
+    return current_user
+
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     logger.debug(f"Creating access token with data: {data}")

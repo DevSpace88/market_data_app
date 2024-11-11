@@ -236,6 +236,7 @@
 from fastapi import APIRouter
 from .routes.auth import router as auth_router
 from .routes.market import router as market_router
+from .routes.admin import router as admin_router
 from .routes.websocket import router as websocket_router
 
 router = APIRouter()
@@ -243,4 +244,5 @@ router = APIRouter()
 # Registriere die Routen mit korrekten Präfixen
 router.include_router(auth_router, prefix="/auth", tags=["auth"])
 router.include_router(market_router, prefix="/market", tags=["market"])
+router.include_router(admin_router, prefix="/admin", tags=["admin"])
 router.include_router(websocket_router, prefix="/ws", tags=["websocket"])
