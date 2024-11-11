@@ -100,32 +100,66 @@ def get_db():
         db.close()
 
 
+# def init_db():
+#     """Initialisiert die Datenbank und erstellt alle Tabellen"""
+#     from .user import User
+#     from .market import MarketData, TechnicalIndicator, SentimentData, PatternDetection
+#
+#     try:
+#         Base.metadata.create_all(bind=engine)
+#         print("Database tables created successfully")
+#
+#         # Erstelle Test-User falls noch keiner existiert
+#         db = SessionLocal()
+#         test_user = db.query(User).filter(User.username == "testuser").first()
+#         if not test_user:
+#             test_user = User(
+#                 username="testuser",
+#                 email="test@example.com",
+#                 full_name="Test User",
+#                 is_active=True,
+#                 hashed_password=User.get_password_hash("testpass")
+#             )
+#             db.add(test_user)
+#             db.commit()
+#             print("Test user created successfully")
+#     except Exception as e:
+#         print(f"Error initializing database: {e}")
+#         raise
+#     finally:
+#         if 'db' in locals():
+#             db.close()
+
+
+# models/database.py (ergänze die bestehende Datei)
+
 def init_db():
-    """Initialisiert die Datenbank und erstellt alle Tabellen"""
+    """Initialisiert die Datenbank und erstellt Admin-User"""
     from .user import User
-    from .market import MarketData, TechnicalIndicator, SentimentData, PatternDetection
 
     try:
         Base.metadata.create_all(bind=engine)
         print("Database tables created successfully")
 
-        # Erstelle Test-User falls noch keiner existiert
         db = SessionLocal()
-        test_user = db.query(User).filter(User.username == "testuser").first()
-        if not test_user:
-            test_user = User(
-                username="testuser",
-                email="test@example.com",
-                full_name="Test User",
+
+        # Admin User erstellen
+        admin_user = db.query(User).filter(User.username == "admin").first()
+        if not admin_user:
+            admin_user = User(
+                username="admin",
+                email="admin@example.com",
+                full_name="Administrator",
                 is_active=True,
-                hashed_password=User.get_password_hash("testpass")
+                is_admin=True,
+                hashed_password=User.get_password_hash("admin123")
             )
-            db.add(test_user)
+            db.add(admin_user)
             db.commit()
-            print("Test user created successfully")
+            print("Admin user created successfully")
+
     except Exception as e:
         print(f"Error initializing database: {e}")
         raise
     finally:
-        if 'db' in locals():
-            db.close()
+        db.close()
