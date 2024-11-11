@@ -140,7 +140,8 @@ class MarketAIAnalysis:
         return result
 
     async def generate_market_summary(self, symbol: str, market_data: List[Dict],
-                                      technical_data: Dict, patterns: List[Dict]) -> Dict:
+                                      technical_data: Dict, patterns: List[Dict],
+                                      currency: str = "USD", currency_symbol: str = "$") -> Dict:
         try:
             cache_key = f"{symbol}_analysis"
             if cache_key in self.cache['analysis']:
@@ -186,11 +187,15 @@ class MarketAIAnalysis:
                 'sentiment_summary': parsed['sentiment'].strip() or f"Market sentiment appears to be {sentiment}",
                 'technical_analysis': self._format_technical_analysis(technical_data.get('current', {})),
                 'support_resistance': {
-                    'support_levels': self._calculate_support_levels(current_price),
-                    'resistance_levels': self._calculate_resistance_levels(current_price)
+                    'support_levels': [
+                        f"{currency_symbol}{level:.2f}" for level in self._calculate_support_levels(current_price)
+                    ],
+                    'resistance_levels': [
+                        f"{currency_symbol}{level:.2f}" for level in self._calculate_resistance_levels(current_price)
+                    ]
                 },
                 'key_insights': [
-                    f"Current price: ${current_price:.2f}",
+                    f"Current price: {currency_symbol}{current_price:.2f}",  # Hier geändert
                     *[f"{p['type']}: {p['description']}" for p in patterns],
                     *parsed['technical']
                 ],

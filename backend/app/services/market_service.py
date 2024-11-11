@@ -66,7 +66,7 @@ class MarketService:
                     'high': float(row['High']),
                     'low': float(row['Low']),
                     'close': float(row['Close']),
-                    'volume': int(row['Volume'])
+                    'volume': int(row['Volume']),
                 }
                 for idx, row in df.iterrows()
             ]

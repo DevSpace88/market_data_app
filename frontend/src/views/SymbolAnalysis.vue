@@ -4,36 +4,41 @@
       <div>
         <h2 class="text-3xl font-bold">{{ symbol }}</h2>
         <p class="text-muted-foreground">
-          Current Price: ${{ formatNumber(currentPrice) }}
+          Current Price: {{ marketStore.currencySymbol }}{{ formatNumber(currentPrice) }}
           <Badge :variant="priceChange >= 0 ? 'default' : 'destructive'" class="ml-2">
             {{ priceChange >= 0 ? '+' : '' }}{{ formatNumber(priceChange) }}%
           </Badge>
         </p>
       </div>
-<!--      <ConnectionStatus />-->
-      <TimeframeSelector v-model="timeframe" @change="handleTimeframeChange" />
+      <!--      <ConnectionStatus />-->
+      <TimeframeSelector v-model="timeframe" @change="handleTimeframeChange"/>
     </div>
 
     <div v-if="loading" class="py-8 text-center text-muted-foreground">
-      <Loader2 class="h-6 w-6 animate-spin mx-auto mb-2" />
+      <Loader2 class="h-6 w-6 animate-spin mx-auto mb-2"/>
       Analyzing market data...
     </div>
     <div v-else class="grid gap-6 grid-cols-1 lg:grid-cols-2">
       <div class="lg:col-span-2">
         <PriceChart
-          :data="marketData"
-          :indicators="activeIndicators"
-          :technical-data="technicalIndicators"
+            :data="marketData"
+            :technical-data="technicalData"
+            :currency="marketStore.currency"
+            :currency-symbol="marketStore.currencySymbol"
         />
       </div>
       <TechnicalIndicators
-        :data="technicalIndicators?.current"
-        @indicator-toggle="handleIndicatorToggle"
+          :data="technicalIndicators?.current"
+          @indicator-toggle="handleIndicatorToggle"
       />
-      <SignalList :signals="signals" />
-      <PatternList :patterns="patterns" />
+      <SignalList :signals="signals"/>
+      <PatternList :patterns="patterns"/>
       <div class="lg:col-span-2">
-        <AIAnalysis :analysis="aiAnalysis" />
+        <AIAnalysis
+          :analysis="aiAnalysis"
+          :currency="marketStore.currency"
+          :currency-symbol="marketStore.currencySymbol"
+        />
       </div>
     </div>
   </div>
@@ -66,11 +71,11 @@ const patterns = computed(() => marketStore.patterns || [])
 const signals = computed(() => marketStore.signals || [])
 const aiAnalysis = computed(() => marketStore.aiAnalysis)
 
-// Neue Computed Property für aktive Indikatoren mit Werten
+// Computed Property für aktive Indikatoren mit Werten
 const activeIndicators = computed(() => {
   if (!technicalIndicators.value?.current) return []
   return selectedIndicators.value.filter(indicator =>
-    technicalIndicators.value.current[indicator] !== undefined
+      technicalIndicators.value.current[indicator] !== undefined
   )
 })
 
