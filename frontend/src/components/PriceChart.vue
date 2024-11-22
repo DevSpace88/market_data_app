@@ -212,7 +212,11 @@
         {{ indicator.name }}
       </Button>
     </div>
-    <div id="chart-container" ref="chartRef" class="h-[700px]"></div>
+    <div
+      id="chart-container"
+      ref="chartRef"
+      class="w-full sm:h-[500px] md:h-[700px] lg:h-[900px]"
+    ></div>
   </div>
 </template>
 

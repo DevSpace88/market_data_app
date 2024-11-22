@@ -152,75 +152,179 @@
 <!--})-->
 <!--</script>-->
 
+<!--<template>-->
+<!--  <header class="border-b bg-background">-->
+<!--    <div class="container mx-auto flex h-16 items-center justify-between px-4">-->
+<!--      <router-link to="/dashboard" class="flex items-center space-x-2 hover:opacity-80">-->
+<!--        <BarChart2 class="h-6 w-6" />-->
+<!--        <span class="text-xl font-semibold">Market Analysis</span>-->
+<!--      </router-link>-->
+
+<!--      <div class="flex items-center space-x-4">-->
+<!--        &lt;!&ndash; Suchfeld mit Dropdown &ndash;&gt;-->
+<!--        <div v-if="authStore.isAuthenticated" class="relative w-96">-->
+<!--          <Input-->
+<!--            v-model="searchQuery"-->
+<!--            placeholder="Suche Symbol (z.B. AAPL, GOOGL)..."-->
+<!--            class="w-full"-->
+<!--            @input="handleSearchInput"-->
+<!--            @focus="handleFocus"-->
+<!--          />-->
+
+<!--          &lt;!&ndash; Loading Indicator &ndash;&gt;-->
+<!--          <div v-if="isLoading" class="absolute right-3 top-1/2 -translate-y-1/2">-->
+<!--            <Loader2 class="h-4 w-4 animate-spin" />-->
+<!--          </div>-->
+
+<!--          &lt;!&ndash; Search Dropdown &ndash;&gt;-->
+<!--          <div-->
+<!--            v-if="showDropdown && searchResults.length > 0"-->
+<!--            class="absolute mt-1 w-full rounded-lg border bg-background shadow-lg z-50"-->
+<!--            v-click-outside="handleClickOutside"-->
+<!--          >-->
+<!--            <div class="max-h-[300px] overflow-y-auto p-2">-->
+<!--              <div-->
+<!--                v-for="result in searchResults"-->
+<!--                :key="result.symbol"-->
+<!--                class="flex cursor-pointer items-center space-x-3 rounded-md p-2 hover:bg-accent"-->
+<!--                @click="selectStock(result)"-->
+<!--              >-->
+<!--                <div class="flex-1">-->
+<!--                  <div class="font-medium">{{ result.symbol }}</div>-->
+<!--                  <div class="text-sm text-muted-foreground">{{ result.name }}</div>-->
+<!--                </div>-->
+<!--                <div class="text-xs text-muted-foreground">-->
+<!--                  {{ result.exchange }}-->
+<!--                </div>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        <div class="flex items-center space-x-2">-->
+<!--          &lt;!&ndash; Theme Toggle &ndash;&gt;-->
+<!--          <Button variant="outline" size="icon" @click="toggleTheme">-->
+<!--            <Sun v-if="isDark" class="h-5 w-5" />-->
+<!--            <Moon v-else class="h-5 w-5" />-->
+<!--          </Button>-->
+
+<!--          &lt;!&ndash; Auth Buttons &ndash;&gt;-->
+<!--          <Button-->
+<!--            v-if="authStore.isAuthenticated"-->
+<!--            variant="outline"-->
+<!--            @click="handleLogout"-->
+<!--          >-->
+<!--            <LogOut class="h-4 w-4 mr-2" />-->
+<!--            Logout-->
+<!--          </Button>-->
+<!--          <Button-->
+<!--            v-else-->
+<!--            @click="router.push('/login')"-->
+<!--          >-->
+<!--            <LogIn class="h-4 w-4 mr-2" />-->
+<!--            Login-->
+<!--          </Button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </header>-->
+<!--</template>-->
+
+
 <template>
   <header class="border-b bg-background">
-    <div class="container mx-auto flex h-16 items-center justify-between px-4">
+    <div class="container mx-auto flex items-center justify-between h-16 px-4 sm:px-6 md:px-8">
+      <!-- Logo und Navigation -->
       <router-link to="/dashboard" class="flex items-center space-x-2 hover:opacity-80">
         <BarChart2 class="h-6 w-6" />
         <span class="text-xl font-semibold">Market Analysis</span>
       </router-link>
 
-      <div class="flex items-center space-x-4">
-        <!-- Suchfeld mit Dropdown -->
-        <div v-if="authStore.isAuthenticated" class="relative w-96">
-          <Input
-            v-model="searchQuery"
-            placeholder="Suche Symbol (z.B. AAPL, GOOGL)..."
-            class="w-full"
-            @input="handleSearchInput"
-            @focus="handleFocus"
-          />
+      <!-- Hamburger Menü für mobile Geräte -->
+      <div class="sm:hidden">
+        <Button variant="outline" size="icon" @click="toggleMobileMenu">
+          <Menu class="h-5 w-5" />
+        </Button>
+      </div>
 
-          <!-- Loading Indicator -->
-          <div v-if="isLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
-            <Loader2 class="h-4 w-4 animate-spin" />
-          </div>
+      <!-- Suchfeld auf größeren Geräten -->
+      <div v-if="authStore.isAuthenticated" class="relative hidden sm:block w-96">
+        <Input
+          v-model="searchQuery"
+          placeholder="Suche Symbol (z.B. AAPL, GOOGL)..."
+          class="w-full"
+          @input="handleSearchInput"
+          @focus="handleFocus"
+        />
+        <div v-if="isLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
+          <Loader2 class="h-4 w-4 animate-spin" />
+        </div>
 
-          <!-- Search Dropdown -->
-          <div
-            v-if="showDropdown && searchResults.length > 0"
-            class="absolute mt-1 w-full rounded-lg border bg-background shadow-lg z-50"
-            v-click-outside="handleClickOutside"
-          >
-            <div class="max-h-[300px] overflow-y-auto p-2">
-              <div
-                v-for="result in searchResults"
-                :key="result.symbol"
-                class="flex cursor-pointer items-center space-x-3 rounded-md p-2 hover:bg-accent"
-                @click="selectStock(result)"
-              >
-                <div class="flex-1">
-                  <div class="font-medium">{{ result.symbol }}</div>
-                  <div class="text-sm text-muted-foreground">{{ result.name }}</div>
-                </div>
-                <div class="text-xs text-muted-foreground">
-                  {{ result.exchange }}
-                </div>
+        <!-- Dropdown für Suchergebnisse -->
+        <div
+          v-if="showDropdown && searchResults.length > 0"
+          class="absolute mt-1 w-full rounded-lg border bg-background shadow-lg z-50"
+          v-click-outside="handleClickOutside"
+        >
+          <div class="max-h-[300px] overflow-y-auto p-2">
+            <div
+              v-for="result in searchResults"
+              :key="result.symbol"
+              class="flex cursor-pointer items-center space-x-3 rounded-md p-2 hover:bg-accent"
+              @click="selectStock(result)"
+            >
+              <div class="flex-1">
+                <div class="font-medium">{{ result.symbol }}</div>
+                <div class="text-sm text-muted-foreground">{{ result.name }}</div>
+              </div>
+              <div class="text-xs text-muted-foreground">
+                {{ result.exchange }}
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="flex items-center space-x-2">
-          <!-- Theme Toggle -->
-          <Button variant="outline" size="icon" @click="toggleTheme">
-            <Sun v-if="isDark" class="h-5 w-5" />
-            <Moon v-else class="h-5 w-5" />
-          </Button>
+      <!-- Rechte Seite: Theme Toggle und Auth Buttons -->
+      <div class="flex items-center space-x-2">
+        <!-- Theme Toggle Button -->
+        <Button variant="outline" size="icon" @click="toggleTheme">
+          <Sun v-if="isDark" class="h-5 w-5" />
+          <Moon v-else class="h-5 w-5" />
+        </Button>
 
-          <!-- Auth Buttons -->
-          <Button
-            v-if="authStore.isAuthenticated"
-            variant="outline"
-            @click="handleLogout"
-          >
+        <!-- Auth Buttons -->
+        <div v-if="authStore.isAuthenticated">
+          <Button variant="outline" @click="handleLogout">
             <LogOut class="h-4 w-4 mr-2" />
             Logout
           </Button>
-          <Button
-            v-else
-            @click="router.push('/login')"
-          >
+        </div>
+        <div v-else>
+          <Button @click="router.push('/login')" class="px-4 py-2">
+            <LogIn class="h-4 w-4 mr-2" />
+            Login
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Menu (Dropdown für kleine Bildschirme) -->
+    <div v-if="isMobileMenuOpen" class="sm:hidden absolute top-16 left-0 w-full bg-background p-4">
+      <div class="flex flex-col space-y-2">
+        <router-link to="/dashboard" class="text-lg py-2">Dashboard</router-link>
+        <Button variant="outline" @click="toggleTheme" class="w-full py-2">
+          <Sun v-if="isDark" class="h-5 w-5" />
+          <Moon v-else class="h-5 w-5" />
+        </Button>
+        <div v-if="authStore.isAuthenticated">
+          <Button variant="outline" @click="handleLogout" class="w-full py-2">
+            <LogOut class="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+        <div v-else>
+          <Button @click="router.push('/login')" class="w-full py-2">
             <LogIn class="h-4 w-4 mr-2" />
             Login
           </Button>
@@ -229,6 +333,7 @@
     </div>
   </header>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'

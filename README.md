@@ -59,10 +59,14 @@ DATABASE_URL=sqlite:///./market_analysis.db
 
 ## Usage
 
-1. Open `http://localhost:5173` in your browser
-2. Use the search bar to find stocks
-3. View real-time data and analysis
-4. Add symbols to your watchlist
+1. ```cd backend```
+2. ```uvicorn app.main:app```
+3. ```cd frontend```
+4. ```npm run dev```
+5. Open `http://localhost:5173` in your browser
+6. Use the search bar to find stocks
+7. View real-time data and analysis
+8. Add symbols to your watchlist
 
 ## API Documentation
 
