@@ -1,0 +1,11 @@
+#TODO
+
+Es so bauen, dass der OpenAI-Key abgespeichert und abgerufen wird aus derr user Tabelle, ist in config.settings (also xinfig.py) dort die DAtenbankabfrage vll hinbauen und das speichern davon halt irgenedwo bei users denke ich
+
+
+die bollinger Bands sind nach wie vor nciht richtig
+
+
+der Dark mode sieht irgendwie noch nicht so gut aus, vermutlich sollte ich einfach alles schwarz machen, dann sieht das besser au smit den chart
+
+Eine Art History einbauen für TA und für PReise auch, wobei letzteres vll too much ist
