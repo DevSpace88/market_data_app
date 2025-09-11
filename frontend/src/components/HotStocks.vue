@@ -8,9 +8,9 @@
           @change="sortStocks"
           class="px-3 py-1 border border-input rounded-md bg-background text-foreground text-sm"
         >
-          <option value="change_percent">Preisänderung %</option>
-          <option value="volume">Volumen</option>
-          <option value="price">Preis</option>
+          <option value="change_percent">{{ t('common.change') }} %</option>
+          <option value="volume">{{ t('common.volume') }}</option>
+          <option value="price">{{ t('common.value') }}</option>
           <option value="symbol">Symbol</option>
         </select>
         <button
@@ -42,11 +42,11 @@
           <thead class="bg-muted/50">
             <tr>
               <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Symbol</th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Preis</th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Änderung</th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Volumen</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{{ t('common.value') }}</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{{ t('common.change') }}</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{{ t('common.volume') }}</th>
               <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Chart</th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Aktion</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Action</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border">
@@ -88,7 +88,7 @@
               </td>
               <td class="px-4 py-3">
                 <div class="w-16 h-8">
-                  <MiniChart :data="stock.chart_data" :isPositive="stock.change_percent >= 0" />
+                  <MiniChart :data="stockCharts[stock.symbol] || []" :isPositive="stock.change_percent >= 0" />
                 </div>
               </td>
               <td class="px-4 py-3">
@@ -127,6 +127,7 @@ const authStore = useAuthStore()
 const emit = defineEmits(['watchlist-changed'])
 
 const stocks = ref([])
+const stockCharts = ref({})
 const sortBy = ref('change_percent')
 const sortOrder = ref('desc')
 const isLoading = ref(false)
@@ -279,6 +280,8 @@ const fetchHotStocks = async () => {
     if (response.ok) {
       const data = await response.json()
       stocks.value = data
+      // Lade Minicharts wie bei Watchlist: 5d Daten pro Symbol
+      await loadChartsForStocks()
       await checkWatchlistStatus()
     } else {
       console.error('Failed to fetch hot stocks')
@@ -301,6 +304,30 @@ const refreshData = async () => {
 onMounted(() => {
   fetchHotStocks()
 })
+
+const loadChartsForStocks = async () => {
+  const symbols = stocks.value.map(s => s.symbol)
+  const results = await Promise.all(symbols.map(async (sym) => {
+    try {
+      const res = await fetch(`/api/v1/market/data/${encodeURIComponent(sym)}?timeframe=5d`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${authStore.token || localStorage.getItem('token') || ''}`
+        }
+      })
+      if (!res.ok) return [sym, []]
+      const payload = await res.json()
+      const arr = Array.isArray(payload) ? payload : (payload.data || payload.historical || payload.prices || [])
+      const prices = (arr || []).map(p => p.close || p.Close || p.price || p.Price || p.value || p.Value || p.adjClose || p.AdjClose).filter(v => typeof v === 'number')
+      return [sym, prices]
+    } catch {
+      return [sym, []]
+    }
+  }))
+  const map = {}
+  results.forEach(([sym, prices]) => { map[sym] = prices })
+  stockCharts.value = map
+}
 </script>
 
 <style scoped>
