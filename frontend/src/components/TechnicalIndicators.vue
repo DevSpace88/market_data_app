@@ -168,7 +168,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Relative Strength Index (0-100). Über 70 = überkauft, unter 30 = überverkauft. Misst Momentum der Preisbewegungen.
+                  {{ t('indicators.rsiInfo') }}
                 </div>
               </div>
             </div>
@@ -202,7 +202,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Moving Average Convergence Divergence. Differenz zwischen 12- und 26-Tage EMA. Positive Werte = bullisch, negative = bärisch.
+                  {{ t('indicators.macdInfo') }}
                 </div>
               </div>
             </div>
@@ -242,7 +242,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Gleitende Durchschnitte glätten Preisschwankungen. SMA = Simple, EMA = Exponential (reagiert schneller auf Änderungen).
+                  {{ t('indicators.maInfo') }}
                 </div>
               </div>
             </div>
@@ -295,7 +295,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Vergleicht Schlusskurs mit 14-Tage Range. K% = %K, D% = 3-Tage Durchschnitt. Über 80 = überkauft, unter 20 = überverkauft.
+                  {{ t('indicators.stochInfo') }}
                 </div>
               </div>
             </div>
@@ -330,7 +330,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Momentum-Oszillator (-100 bis 0). Über -20 = überkauft, unter -80 = überverkauft. Ähnlich wie Stochastic, aber mit negativen Werten.
+                  {{ t('indicators.williamsInfo') }}
                 </div>
               </div>
             </div>
@@ -363,7 +363,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Commodity Channel Index misst Abweichung vom typischen Preis. Über +100 = überkauft, unter -100 = überverkauft. Unbegrenzte Skala.
+                  {{ t('indicators.cciInfo') }}
                 </div>
               </div>
             </div>
@@ -396,7 +396,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Average Directional Index misst Trendstärke (0-100). Über 25 = starker Trend, unter 20 = schwacher Trend. +DI/-DI zeigen Trendrichtung.
+                  {{ t('indicators.adxInfo') }}
                 </div>
               </div>
             </div>
@@ -433,7 +433,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Volatilitäts-Indikator mit 3 Linien: SMA20 ± 2 Standardabweichungen. Preis nahe oberer Band = überkauft, nahe unterer Band = überverkauft.
+                  {{ t('indicators.bbInfo') }}
                 </div>
               </div>
             </div>
@@ -486,7 +486,7 @@
               <div class="group relative">
                 <Info class="h-4 w-4 text-muted-foreground cursor-help" />
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
-                  Average True Range misst Volatilität. Höhere Werte = mehr Volatilität. Wichtig für Stop-Loss und Position Sizing.
+                  {{ t('indicators.atrInfo') }}
                 </div>
               </div>
             </div>

@@ -64,7 +64,16 @@ const messages = {
       vroc: 'Volume Rate of Change',
       adLine: 'Accumulation/Distribution Line',
       pivotPoints: 'Pivot Points',
-      info: 'Technical indicators show various aspects of price movement and help with trend analysis. RSI measures overbought/oversold, MACD shows momentum, SMA/EMA are moving averages, Bollinger Bands show volatility.'
+      info: 'Technical indicators show various aspects of price movement and help with trend analysis. RSI measures overbought/oversold, MACD shows momentum, SMA/EMA are moving averages, Bollinger Bands show volatility.',
+      rsiInfo: 'Relative Strength Index (0-100). Above 70 = overbought, below 30 = oversold. Measures price momentum.',
+      macdInfo: 'Moving Average Convergence Divergence. Difference between 12- and 26-day EMA. Positive = bullish, Negative = bearish.',
+      maInfo: 'Moving averages smooth price fluctuations. SMA = Simple, EMA = Exponential (reacts faster to changes).',
+      stochInfo: 'Compares close to 14-day range. %K and %D (3-day average). Above 80 = overbought, below 20 = oversold.',
+      williamsInfo: 'Momentum oscillator (-100 to 0). Above -20 = overbought, below -80 = oversold. Similar to Stochastic, but negative scale.',
+      cciInfo: 'Commodity Channel Index measures deviation from typical price. Above +100 = overbought, below -100 = oversold.',
+      adxInfo: 'Average Directional Index measures trend strength (0-100). Above 25 = strong trend. +DI/-DI indicate trend direction.',
+      bbInfo: 'Volatility indicator with 3 lines: SMA20 ± 2 standard deviations. Near upper band = overbought, near lower band = oversold.',
+      atrInfo: 'Average True Range measures volatility. Higher values = more volatility. Useful for stop-loss and position sizing.'
     },
     
     // Trading Signals
@@ -228,7 +237,16 @@ const messages = {
       vroc: 'Volume Rate of Change',
       adLine: 'Accumulation/Distribution Line',
       pivotPoints: 'Pivot Points',
-      info: 'Technische Indikatoren zeigen verschiedene Aspekte der Preisbewegung und helfen bei der Trendanalyse. RSI misst Überkauft/Überverkauft, MACD zeigt Momentum, SMA/EMA sind gleitende Durchschnitte, Bollinger Bänder zeigen Volatilität.'
+      info: 'Technische Indikatoren zeigen verschiedene Aspekte der Preisbewegung und helfen bei der Trendanalyse. RSI misst Überkauft/Überverkauft, MACD zeigt Momentum, SMA/EMA sind gleitende Durchschnitte, Bollinger Bänder zeigen Volatilität.',
+      rsiInfo: 'Relative Strength Index (0-100). Über 70 = überkauft, unter 30 = überverkauft. Misst Momentum der Preisbewegungen.',
+      macdInfo: 'Moving Average Convergence Divergence. Differenz zwischen 12- und 26-Tage-EMA. Positiv = bullisch, negativ = bärisch.',
+      maInfo: 'Gleitende Durchschnitte glätten Preisschwankungen. SMA = Simple, EMA = Exponential (reagiert schneller auf Änderungen).',
+      stochInfo: 'Vergleicht Schlusskurs mit 14-Tage-Range. %K und %D (3-Tage-Durchschnitt). Über 80 = überkauft, unter 20 = überverkauft.',
+      williamsInfo: 'Momentum-Oszillator (-100 bis 0). Über -20 = überkauft, unter -80 = überverkauft. Ähnlich wie Stochastic, aber negative Skala.',
+      cciInfo: 'Commodity Channel Index misst Abweichung vom typischen Preis. Über +100 = überkauft, unter -100 = überverkauft.',
+      adxInfo: 'Average Directional Index misst Trendstärke (0-100). Über 25 = starker Trend. +DI/-DI zeigen Trendrichtung.',
+      bbInfo: 'Volatilitäts-Indikator mit 3 Linien: SMA20 ± 2 Standardabweichungen. Preis nahe oberer Band = überkauft, nahe unterer Band = überverkauft.',
+      atrInfo: 'Average True Range misst Volatilität. Höhere Werte = mehr Volatilität. Wichtig für Stop-Loss und Position Sizing.'
     },
     
     // Trading Signals
