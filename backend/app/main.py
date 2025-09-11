@@ -128,6 +128,10 @@ app.add_middleware(
 # Normal routes
 app.include_router(api_router, prefix=settings.API_PREFIX)
 
+# Include watchlist routes directly
+from .api.routes.watchlist import router as watchlist_router
+app.include_router(watchlist_router, prefix="/api/v1/watchlist", tags=["watchlist"])
+
 # Startup Event
 @app.on_event("startup")
 async def startup_event():

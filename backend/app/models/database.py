@@ -136,6 +136,7 @@ def get_db():
 def init_db():
     """Initialisiert die Datenbank und erstellt Admin-User"""
     from .user import User
+    from .watchlist import Watchlist
 
     try:
         Base.metadata.create_all(bind=engine)

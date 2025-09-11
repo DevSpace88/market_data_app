@@ -1,5 +1,6 @@
 # models/user.py
 from sqlalchemy import Boolean, Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from passlib.context import CryptContext
 from .database import Base
@@ -18,6 +19,9 @@ class User(Base):
     is_admin = Column(Boolean, default=False)  # Neue Spalte
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    watchlists = relationship("Watchlist", back_populates="user")
 
     @staticmethod
     def get_password_hash(password: str) -> str:

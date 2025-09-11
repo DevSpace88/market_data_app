@@ -10,8 +10,27 @@
           </Badge>
         </p>
       </div>
-<!--      <ConnectionStatus />-->
-      <TimeframeSelector v-model="timeframe" @change="handleTimeframeChange" />
+      <div class="flex items-center gap-3">
+        <button
+          @click="toggleWatchlist"
+          :disabled="isWatchlistLoading"
+          class="p-2 rounded-md transition-colors hover:bg-accent"
+          :class="isInWatchlist 
+            ? 'text-destructive hover:text-destructive/80' 
+            : 'text-muted-foreground hover:text-foreground'"
+        >
+          <svg v-if="isWatchlistLoading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <svg v-else-if="isInWatchlist" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+        </button>
+        <TimeframeSelector v-model="timeframe" @change="handleTimeframeChange" />
+      </div>
     </div>
 
     <div v-if="loading" class="py-8 text-center text-muted-foreground">
@@ -48,6 +67,7 @@
 import { ref, computed, onMounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMarketStore } from '@/stores/market'
+import { useAuthStore } from '@/stores/auth'
 import { Loader2 } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import TimeframeSelector from '@/components/TimeframeSelector.vue'
@@ -60,8 +80,14 @@ import ConnectionStatus from '@/components/ConnectionStatus.vue'
 
 const route = useRoute()
 const marketStore = useMarketStore()
+const authStore = useAuthStore()
 const timeframe = ref('1Y')
 const selectedIndicators = ref(['sma_20', 'sma_50', 'bb_upper', 'bb_lower', 'bb_middle'])
+
+// Watchlist state
+const isInWatchlist = ref(false)
+const isWatchlistLoading = ref(false)
+const watchlistItemId = ref(null)
 
 const symbol = computed(() => route.params.symbol)
 const loading = computed(() => marketStore.loading)
@@ -114,9 +140,79 @@ const formatNumber = (num) => {
   return num ? Number(num).toFixed(2) : '0.00'
 }
 
+// Watchlist functions
+const checkWatchlistStatus = async () => {
+  try {
+    const response = await fetch('/api/v1/watchlist/', {
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      }
+    })
+    
+    if (response.ok) {
+      const watchlist = await response.json()
+      const item = watchlist.find(item => item.symbol === symbol.value)
+      if (item) {
+        isInWatchlist.value = true
+        watchlistItemId.value = item.id
+      } else {
+        isInWatchlist.value = false
+        watchlistItemId.value = null
+      }
+    }
+  } catch (err) {
+    console.error('Error checking watchlist status:', err)
+  }
+}
+
+const toggleWatchlist = async () => {
+  isWatchlistLoading.value = true
+  
+  try {
+    if (isInWatchlist.value) {
+      // Remove from watchlist
+      const response = await fetch(`/api/v1/watchlist/${watchlistItemId.value}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+        }
+      })
+      
+      if (response.ok) {
+        isInWatchlist.value = false
+        watchlistItemId.value = null
+      }
+    } else {
+      // Add to watchlist
+      const response = await fetch('/api/v1/watchlist/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authStore.token}`
+        },
+        body: JSON.stringify({
+          symbol: symbol.value,
+          display_name: symbol.value
+        })
+      })
+      
+      if (response.ok) {
+        const newItem = await response.json()
+        isInWatchlist.value = true
+        watchlistItemId.value = newItem.id
+      }
+    }
+  } catch (err) {
+    console.error('Error toggling watchlist:', err)
+  } finally {
+    isWatchlistLoading.value = false
+  }
+}
+
 onMounted(() => {
   fetchData()
   marketStore.initializeWebSocket(symbol.value)
+  checkWatchlistStatus()
 })
 
 watchEffect(() => {
