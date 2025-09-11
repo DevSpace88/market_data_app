@@ -192,76 +192,7 @@ async def get_market_data(
 
 # app/api/routes/market.py
 
-@router.get("/analysis/{symbol}")
-async def get_market_analysis(
-        symbol: str,
-        timeframe: str = Query("1M", regex="^(1D|1W|1M|3M|6M|YTD|1Y)$"),
-        include_news: bool = Query(True),
-        db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_active_user)
-):
-    try:
-        market_service = MarketService(db)
-
-        # Währungsbestimmung basierend auf Symbol-Suffix
-        currency = "USD"
-        currency_symbol = "$"
-
-        if symbol.endswith('.T'):  # Japanische Börse
-            currency = "JPY"
-            currency_symbol = "¥"
-        elif symbol.endswith('.L'):  # London
-            currency = "GBP"
-            currency_symbol = "£"
-        elif symbol.endswith('.HK'):  # Hong Kong
-            currency = "HKD"
-            currency_symbol = "HK$"
-
-        timeframe_map = {
-            "1D": ("1d", "5m"),
-            "1W": ("7d", "1h"),
-            "1M": ("1mo", "1d"),
-            "3M": ("3mo", "1d"),
-            "6M": ("6mo", "1d"),
-            "1Y": ("1y", "1d"),
-            "YTD": ("ytd", "1d")
-        }
-        period, interval = timeframe_map.get(timeframe, ("1mo", "1h"))
-
-        market_data = await market_service.fetch_market_data(symbol, period=period, interval=interval)
-        if not market_data:
-            raise HTTPException(status_code=404, detail=f"Market data not found for symbol {symbol}")
-
-        technical_data = market_service.calculate_technical_indicators(market_data)
-        patterns = await market_service.detect_patterns(market_data)
-        signals = market_service.generate_signals(market_data, technical_data)
-
-        ai_analysis = await market_ai.generate_market_summary(
-            symbol=symbol,
-            market_data=market_data,
-            technical_data=technical_data,
-            patterns=patterns,
-            currency=currency,  # Neue Parameter
-            currency_symbol=currency_symbol  # Neue Parameter
-        )
-
-        # Füge Währungsinformationen zum Response hinzu
-        return {
-            "symbol": symbol,
-            "timestamp": datetime.now().isoformat(),
-            "market_data": market_data,
-            "technical_indicators": technical_data,
-            "patterns": patterns,
-            "signals": signals,
-            "ai_analysis": ai_analysis,
-            "timeframe": timeframe,
-            "currency": currency,
-            "currencySymbol": currency_symbol
-        }
-
-    except Exception as e:
-        logging.error(f"Error in market analysis: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error analyzing market data: {str(e)}")
+# Alte Analyse-Route entfernt, um Konflikte mit neuer strukturierter Analyse zu vermeiden
 
 # kp ob das noch nötig ist?
 @router.get("/validate/{symbol}")

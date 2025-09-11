@@ -16,7 +16,7 @@ class AISettingsBase(BaseModel):
     ai_max_tokens: int = Field(default=1000, ge=1, le=4000, description="Max tokens")
 
 class AISettingsUpdate(AISettingsBase):
-    ai_api_key: Optional[str] = Field(None, description="API Key (will be encrypted)")
+    ai_api_key: Optional[str] = Field(None, description="API Key (plaintext)")
 
 class AISettingsResponse(AISettingsBase):
     """Response without sensitive API key"""

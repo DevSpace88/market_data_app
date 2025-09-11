@@ -489,6 +489,39 @@ export const useMarketStore = defineStore('market', {
   },
 
   actions: {
+    async fetchMarketData(symbol, timeframe) {
+      if (!symbol) return;
+      this.loading = true;
+      this.error = null;
+
+      // Map Frontend-Zeitrahmen zu Backend-Param
+      const map = {
+        '1D': '1d',
+        '1W': '5d',
+        '1M': '1mo',
+        '3M': '3mo',
+        '6M': '6mo',
+        '1Y': '1y',
+        'YTD': 'ytd'
+      };
+      const tf = map[timeframe] || '1mo';
+
+      try {
+        const response = await axios.get(`/api/v1/market/data/${symbol}`, {
+          params: { timeframe: tf }
+        });
+        if (response.data) {
+          this.marketData = response.data.data || [];
+          this.currency = response.data.currency || 'USD';
+          this.currencySymbol = response.data.currencySymbol || '$';
+        }
+      } catch (error) {
+        console.error('Error fetching market data:', error);
+        this.error = error.response?.data?.detail || 'Failed to fetch market data';
+      } finally {
+        this.loading = false;
+      }
+    },
     async fetchMarketAnalysis(symbol, timeframe) {
       if (!symbol) return;
       this.loading = true;
@@ -504,7 +537,7 @@ export const useMarketStore = defineStore('market', {
         });
 
         if (response.data) {
-          this.marketData = response.data.market_data || [];
+          // Belasse Chart-Daten unverändert; kommen aus /market/data
           this.technicalIndicators = response.data.technical_indicators || {};
           this.patterns = response.data.patterns || [];
           this.signals = response.data.signals || [];
@@ -528,8 +561,8 @@ export const useMarketStore = defineStore('market', {
           }
 
           // Debugging: Überprüfe gesetzte Werte
-          console.log('Currency:', this.currency);  // Soll 'JPY' anzeigen
-          console.log('Currency Symbol:', this.currencySymbol);  // Soll '¥' anzeigen
+          console.log('Currency:', this.currency);
+          console.log('Currency Symbol:', this.currencySymbol);
         }
       } catch (error) {
         console.error('Error fetching market analysis:', error);
@@ -544,6 +577,7 @@ export const useMarketStore = defineStore('market', {
       console.log(`Setting timeframe to ${timeframe}`)
       this.timeframe = timeframe
       if (this.selectedSymbol) {
+        this.fetchMarketData(this.selectedSymbol, timeframe)
         this.fetchMarketAnalysis(this.selectedSymbol, timeframe)
         this.sendTimeframeUpdate(timeframe)
       }

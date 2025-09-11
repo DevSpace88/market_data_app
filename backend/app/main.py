@@ -140,6 +140,10 @@ app.include_router(hot_stocks_router, prefix="/api/v1/hot-stocks", tags=["hot-st
 from .api.routes.ai_settings import router as ai_settings_router
 app.include_router(ai_settings_router, prefix="/api/v1/ai-settings", tags=["ai-settings"])
 
+# Include market analysis routes
+from .api.routes.market_analysis import router as market_analysis_router
+app.include_router(market_analysis_router, prefix="/api/v1/market", tags=["market-analysis"])
+
 # Startup Event
 @app.on_event("startup")
 async def startup_event():

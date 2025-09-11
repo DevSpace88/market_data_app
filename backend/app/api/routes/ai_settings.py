@@ -50,9 +50,9 @@ async def update_ai_settings(
         current_user.ai_temperature = str(settings.ai_temperature)
         current_user.ai_max_tokens = settings.ai_max_tokens
         
-        # Encrypt and store API key if provided
+        # Store API key in plaintext if provided
         if settings.ai_api_key:
-            current_user.ai_api_key = ai_provider_service.encrypt_api_key(settings.ai_api_key)
+            current_user.ai_api_key = settings.ai_api_key
         
         db.commit()
         db.refresh(current_user)
@@ -81,10 +81,8 @@ async def test_ai_connection(
         if not current_user.ai_api_key:
             raise HTTPException(status_code=400, detail="No API key configured")
         
-        # Decrypt API key
-        api_key = ai_provider_service.decrypt_api_key(current_user.ai_api_key)
-        if not api_key:
-            raise HTTPException(status_code=400, detail="Invalid API key")
+        # Read API key directly (no encryption)
+        api_key = current_user.ai_api_key
         
         # Test connection
         result = ai_provider_service.test_api_connection(

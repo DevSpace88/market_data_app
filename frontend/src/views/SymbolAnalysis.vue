@@ -41,7 +41,7 @@
       <div class="lg:col-span-2">
         <PriceChart
             :data="marketData"
-            :technical-data="technicalData"
+            :technical-data="technicalIndicators"
             :currency="marketStore.currency"
             :currency-symbol="marketStore.currencySymbol"
         />
@@ -133,6 +133,7 @@ const handleIndicatorToggle = (indicator) => {
 
 const fetchData = async () => {
   console.log(`Fetching data for ${symbol.value} with timeframe ${timeframe.value}`)
+  await marketStore.fetchMarketData(symbol.value, timeframe.value)
   await marketStore.fetchMarketAnalysis(symbol.value, timeframe.value)
 }
 
