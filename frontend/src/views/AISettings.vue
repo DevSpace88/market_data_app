@@ -312,8 +312,6 @@ const loadSettings = async () => {
 }
 
 const selectProvider = (providerName) => {
-  console.log('Selecting provider:', providerName)
-  console.log('Available providers:', providers.value)
   
   selectedProvider.value = providerName
   settings.value.ai_provider = providerName
@@ -322,7 +320,6 @@ const selectProvider = (providerName) => {
   const provider = providers.value[providerName]
   if (provider) {
     settings.value.ai_model = provider.default_model
-    console.log('Updated model to:', provider.default_model)
   }
   
   // Clear previous test results when switching providers
@@ -408,12 +405,7 @@ const clearApiKey = async () => {
 
 // Lifecycle
 onMounted(async () => {
-  console.log('Loading providers...')
   await loadProviders()
-  console.log('Providers loaded:', providers.value)
-  
-  console.log('Loading settings...')
   await loadSettings()
-  console.log('Settings loaded:', settings.value)
 })
 </script>

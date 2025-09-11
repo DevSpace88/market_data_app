@@ -603,7 +603,6 @@ async def login(
         db: Session = Depends(get_db)
 ):
     """Login a user and return access token"""
-    logger.debug(f"Login attempt for username: {form_data.username}")
 
     # Find user by username
     user = db.query(User).filter(User.username == form_data.username).first()
@@ -622,7 +621,6 @@ async def login(
         expires_delta=access_token_expires
     )
 
-    logger.debug(f"Login successful for user: {user.username}")
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -632,11 +630,8 @@ async def login(
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
     """Get current user information"""
-    logger.debug(f"Received request for user info with token")
-    logger.debug(f"Current user: {current_user.username}")
     try:
         response = UserResponse.model_validate(current_user)
-        logger.debug(f"Response prepared: {response}")
         return response
     except Exception as e:
         logger.error(f"Error in get_current_user_info: {str(e)}")

@@ -110,7 +110,6 @@ export const useAuthStore = defineStore('auth', {
         formData.append('password', password)
 
         const response = await axios.post('/api/v1/auth/login', formData)
-        console.log('Login response:', response.data)
 
         const { access_token, user } = response.data
 
@@ -122,8 +121,6 @@ export const useAuthStore = defineStore('auth', {
         this.user = user
 
         // Debug
-        console.log('Token saved:', access_token)
-        console.log('Current axios headers:', axios.defaults.headers.common)
 
         return true
       } catch (error) {
@@ -139,12 +136,10 @@ export const useAuthStore = defineStore('auth', {
       try {
         const token = localStorage.getItem('token')
         if (!token) {
-          console.log('No token found, logging out')
           this.logout()
           return false
         }
 
-        console.log('Checking auth with token:', token)
 
         // Explizit den Header setzen
         const response = await axios.get('/api/v1/auth/me', {
@@ -154,7 +149,6 @@ export const useAuthStore = defineStore('auth', {
           }
         })
 
-        console.log('Auth check response:', response.data)
         this.user = response.data
         return true
       } catch (error) {
@@ -165,7 +159,6 @@ export const useAuthStore = defineStore('auth', {
     },
 
     logout() {
-      console.log('Logging out, clearing state')
       this.user = null
       this.token = null
       localStorage.removeItem('token')

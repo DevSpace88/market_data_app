@@ -282,17 +282,14 @@
 #         token: str = Depends(oauth2_scheme),
 #         db: Session = Depends(get_db)  # DB Session hinzugefügt
 # ):
-#     logger.debug("Starting token validation")
-#     credentials_exception = HTTPException(
+# #     credentials_exception = HTTPException(
 #         status_code=status.HTTP_401_UNAUTHORIZED,
 #         detail="Could not validate credentials",
 #         headers={"WWW-Authenticate": "Bearer"},
 #     )
 #     try:
-#         logger.debug(f"Decoding token: {token[:20]}...")
-#         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-#         logger.debug(f"Token payload: {payload}")
-#
+# #         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+# #
 #         username: str = payload.get("sub")
 #         if username is None:
 #             logger.error("No username in token payload")
@@ -304,8 +301,7 @@
 #             logger.error(f"No user found in database for username: {username}")
 #             raise credentials_exception
 #
-#         logger.debug(f"User found in database: {user.username}")
-#         return user
+# #         return user
 #
 #     except JWTError as e:
 #         logger.error(f"JWT Error during validation: {str(e)}")
@@ -315,31 +311,26 @@
 # async def get_current_active_user(
 #         current_user: User = Depends(get_current_user)
 # ):
-#     logger.debug(f"Checking if user is active: {current_user.username}")
-#     if not current_user.is_active:
+# #     if not current_user.is_active:
 #         raise HTTPException(status_code=400, detail="Inactive user")
 #     return current_user
 #
 #
 # def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-#     logger.debug(f"Creating access token with data: {data}")
-#     to_encode = data.copy()
+# #     to_encode = data.copy()
 #     if expires_delta:
 #         expire = datetime.utcnow() + expires_delta
 #     else:
 #         expire = datetime.utcnow() + timedelta(minutes=15)
 #     to_encode.update({"exp": expire})
-#     logger.debug(f"Token payload before encoding: {to_encode}")
-#     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-#     logger.debug("Token created successfully")
-#     return encoded_jwt
+# #     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+# #     return encoded_jwt
 #
 #
 # # WebSocket Authentication auch anpassen
 # async def verify_ws_token(token: str, db: Session = Depends(get_db)) -> Optional[User]:
 #     """Verify WebSocket token and return user"""
-#     logger.debug("Verifying WS token")
-#     try:
+# #     try:
 #         payload = jwt.decode(token, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 #         username: str = payload.get("sub")
 #         if username is None:
@@ -398,17 +389,14 @@
 #         token: str = Depends(oauth2_scheme),
 #         db: Session = Depends(get_db)
 # ):
-#     logger.debug("Starting token validation")
-#     credentials_exception = HTTPException(
+# #     credentials_exception = HTTPException(
 #         status_code=status.HTTP_401_UNAUTHORIZED,
 #         detail="Could not validate credentials",
 #         headers={"WWW-Authenticate": "Bearer"},
 #     )
 #     try:
-#         logger.debug(f"Decoding token: {token[:20]}...")
-#         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-#         logger.debug(f"Token payload: {payload}")
-#
+# #         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+# #
 #         username: str = payload.get("sub")
 #         if username is None:
 #             logger.error("No username in token payload")
@@ -419,8 +407,7 @@
 #             logger.error(f"No user found in database for username: {username}")
 #             raise credentials_exception
 #
-#         logger.debug(f"User found in database: {user.username}")
-#         return user
+# #         return user
 #
 #     except JWTError as e:
 #         logger.error(f"JWT Error during validation: {str(e)}")
@@ -430,8 +417,7 @@
 # async def get_current_active_user(
 #         current_user: User = Depends(get_current_user)
 # ):
-#     logger.debug(f"Checking if user is active: {current_user.username}")
-#     if not current_user.is_active:
+# #     if not current_user.is_active:
 #         raise HTTPException(status_code=400, detail="Inactive user")
 #     return current_user
 #
@@ -439,30 +425,25 @@
 #     current_user: User = Depends(get_current_active_user)
 # ):
 #     """Überprüft ob der User ein Admin ist"""
-#     logger.debug(f"Checking if user {current_user.username} is admin")
-#     if not current_user.is_admin:
+# #     if not current_user.is_admin:
 #         logger.warning(f"User {current_user.username} tried to access admin area")
 #         raise HTTPException(
 #             status_code=status.HTTP_403_FORBIDDEN,
 #             detail="Admin access required"
 #         )
-#     logger.debug(f"Admin access granted for {current_user.username}")
-#     return current_user
+# #     return current_user
 #
 #
 # def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-#     logger.debug(f"Creating access token with data: {data}")
-#     to_encode = data.copy()
+# #     to_encode = data.copy()
 #     if expires_delta:
 #         expire = datetime.utcnow() + expires_delta
 #     else:
 #         expire = datetime.utcnow() + timedelta(minutes=15)
 #     to_encode.update({"exp": expire})
 #
-#     logger.debug(f"Token payload before encoding: {to_encode}")
-#     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-#     logger.debug("Token created successfully")
-#     return encoded_jwt
+# #     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+# #     return encoded_jwt
 #
 #
 # async def get_current_admin_user(
@@ -482,8 +463,7 @@
 #
 #
 # async def verify_ws_token(token: str, db: Session = Depends(get_db)) -> Optional[User]:
-#     logger.debug("Verifying WS token")
-#     try:
+# #     try:
 #         payload = jwt.decode(token, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 #         username: str = payload.get("sub")
 #         if not username:
@@ -533,16 +513,13 @@ async def get_current_user(
         token: str = Depends(oauth2_scheme),
         db: Session = Depends(get_db)
 ):
-    logger.debug("Starting token validation")
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        logger.debug(f"Decoding token: {token[:20]}...")
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        logger.debug(f"Token payload: {payload}")
 
         username: str = payload.get("sub")
         if username is None:
@@ -554,7 +531,6 @@ async def get_current_user(
             logger.error(f"No user found in database for username: {username}")
             raise credentials_exception
 
-        logger.debug(f"User found in database: {user.username}")
         return user
 
     except DecodeError as e:  # Changed from JWTDecodeError
@@ -564,7 +540,6 @@ async def get_current_user(
 async def get_current_active_user(
         current_user: User = Depends(get_current_user)
 ):
-    logger.debug(f"Checking if user is active: {current_user.username}")
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
@@ -573,18 +548,15 @@ async def get_current_admin_user(
     current_user: User = Depends(get_current_active_user)
 ):
     """Überprüft ob der User ein Admin ist"""
-    logger.debug(f"Checking if user {current_user.username} is admin")
     if not current_user.is_admin:
         logger.warning(f"User {current_user.username} tried to access admin area")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
         )
-    logger.debug(f"Admin access granted for {current_user.username}")
     return current_user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    logger.debug(f"Creating access token with data: {data}")
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -592,9 +564,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
 
-    logger.debug(f"Token payload before encoding: {to_encode}")
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    logger.debug("Token created successfully")
     return encoded_jwt
 
 # WebSocket auth
@@ -602,7 +572,6 @@ async def get_token_from_ws_query(websocket: WebSocket) -> Optional[str]:
     return websocket.query_params.get("token")
 
 async def verify_ws_token(token: str, db: Session = Depends(get_db)) -> Optional[User]:
-    logger.debug("Verifying WS token")
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username: str = payload.get("sub")

@@ -138,9 +138,13 @@ const handleIndicatorToggle = (indicator) => {
 }
 
 const fetchData = async () => {
-  console.log(`Fetching data for ${symbol.value} with timeframe ${timeframe.value}`)
+  // Reset watchlist status when switching symbols
+  isInWatchlist.value = false
+  watchlistItemId.value = null
   await marketStore.fetchMarketData(symbol.value, timeframe.value)
   await marketStore.fetchMarketAnalysis(symbol.value, timeframe.value)
+  // Check watchlist status for new symbol
+  await checkWatchlistStatus()
 }
 
 const formatNumber = (num) => {

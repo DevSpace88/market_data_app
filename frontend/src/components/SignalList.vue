@@ -1,7 +1,15 @@
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Trading Signals</CardTitle>
+      <div class="flex items-center gap-2">
+        <CardTitle>Trading Signals</CardTitle>
+        <div class="group relative">
+          <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+          <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+            Trading-Signale basieren auf technischen Indikatoren und Mustern. BUY = Kaufempfehlung, SELL = Verkaufsempfehlung, HOLD = Warten.
+          </div>
+        </div>
+      </div>
     </CardHeader>
     <CardContent>
       <div class="space-y-4">
@@ -47,6 +55,7 @@
 <script setup>
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Info } from 'lucide-vue-next'
 
 const props = defineProps({
   signals: {

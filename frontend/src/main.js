@@ -56,35 +56,14 @@ axios.interceptors.request.use(request => {
   if (token) {
     request.headers.Authorization = `Bearer ${token}`
   }
-  console.log('Request:', {
-    url: request.url,
-    method: request.method,
-    headers: request.headers,
-    data: request.data
-  })
   return request
 })
 
 axios.interceptors.response.use(
   response => {
-    console.log('Response:', {
-      status: response.status,
-      headers: response.headers,
-      data: response.data
-    })
     return response
   },
   error => {
-    console.log('Error Response:', {
-      status: error.response?.status,
-      headers: error.response?.headers,
-      data: error.response?.data,
-      config: {
-        url: error.config.url,
-        method: error.config.method,
-        headers: error.config.headers
-      }
-    })
     return Promise.reject(error)
   }
 )

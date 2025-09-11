@@ -220,8 +220,6 @@ async def search_stocks(
     current_user: User = Depends(get_current_active_user)
 ):
     """Suche nach Stocks basierend auf Symbol oder Name"""
-    logger.debug(f"Search request for query: {query}")
     market_service = MarketService(db)
     results = await market_service.search_stocks(query)
-    logger.debug(f"Found {len(results)} results for {query}")
     return results

@@ -76,8 +76,7 @@
 // //
 // //     setTimeframe(timeframe) {
 // //       if (this.timeframe === timeframe) return
-// //       console.log(`Setting timeframe to ${timeframe}`)
-// //       this.timeframe = timeframe
+// // // //       this.timeframe = timeframe
 // //       if (this.selectedSymbol) {
 // //         this.fetchMarketAnalysis(this.selectedSymbol, timeframe)
 // //         this.sendTimeframeUpdate(timeframe)
@@ -93,12 +92,10 @@
 // //       const wsUrl = `${protocol}//${host}/api/v1/ws/market/${symbol}`
 // //
 // //       try {
-// //         console.log('Initializing WebSocket connection:', wsUrl)
-// //         this.websocket = new WebSocket(wsUrl)
+// // // //         this.websocket = new WebSocket(wsUrl)
 // //
 // //         this.websocket.onopen = () => {
-// //           console.log('WebSocket connected successfully')
-// //           this.wsConnected = true
+// // // //           this.wsConnected = true
 // //           this.startPingInterval()
 // //         }
 // //
@@ -107,8 +104,7 @@
 // //             const data = JSON.parse(event.data)
 // //             switch (data.type) {
 // //               case 'market_update':
-// //                 console.log('Received market update')
-// //                 this.handleMarketUpdate(data)
+// // // //                 this.handleMarketUpdate(data)
 // //                 break
 // //               case 'pong':
 // //                 this.lastPongTime = Date.now()
@@ -117,8 +113,7 @@
 // //                 console.error('WebSocket error message:', data.message)
 // //                 break
 // //               default:
-// //                 console.log('Received unknown message type:', data.type)
-// //             }
+// // // //             }
 // //           } catch (error) {
 // //             console.error('Error processing WebSocket message:', error)
 // //           }
@@ -130,12 +125,10 @@
 // //         }
 // //
 // //         this.websocket.onclose = () => {
-// //           console.log('WebSocket disconnected, cleaning up')
-// //           this.wsConnected = false
+// // // //           this.wsConnected = false
 // //           this.cleanupWebSocket()
 // //
-// //           console.log('Attempting to reconnect in 5 seconds...')
-// //           setTimeout(() => {
+// // // //           setTimeout(() => {
 // //             if (this.selectedSymbol) {
 // //               this.initializeWebSocket(this.selectedSymbol)
 // //             }
@@ -151,20 +144,16 @@
 // //     handleMarketUpdate(data) {
 // //       if (data.data) {
 // //         this.marketData = data.data
-// //         console.log('Updated market data:', this.marketData.length, 'points')
-// //       }
+// // // //       }
 // //       if (data.technical) {
 // //         this.technicalIndicators = data.technical
-// //         console.log('Updated technical indicators')
-// //       }
+// // // //       }
 // //       if (data.patterns) {
 // //         this.patterns = data.patterns
-// //         console.log('Updated patterns:', this.patterns.length)
-// //       }
+// // // //       }
 // //       if (data.signals) {
 // //         this.signals = data.signals
-// //         console.log('Updated signals:', this.signals.length)
-// //       }
+// // // //       }
 // //     },
 // //
 // //     startPingInterval() {
@@ -174,13 +163,11 @@
 // //
 // //       this.pingInterval = setInterval(() => {
 // //         if (this.websocket?.readyState === WebSocket.OPEN) {
-// //           console.log('Sending ping')
-// //           this.websocket.send(JSON.stringify({ type: 'ping' }))
+// // // //           this.websocket.send(JSON.stringify({ type: 'ping' }))
 // //
 // //           // Check if we haven't received a pong in 45 seconds
 // //           if (this.lastPongTime && Date.now() - this.lastPongTime > 45000) {
-// //             console.log('No pong received, reconnecting...')
-// //             this.cleanupWebSocket()
+// // // //             this.cleanupWebSocket()
 // //             this.initializeWebSocket(this.selectedSymbol)
 // //           }
 // //         }
@@ -189,8 +176,7 @@
 // //
 // //     sendTimeframeUpdate(timeframe) {
 // //       if (this.websocket?.readyState === WebSocket.OPEN) {
-// //         console.log('Sending timeframe update:', timeframe)
-// //         this.websocket.send(JSON.stringify({
+// // // //         this.websocket.send(JSON.stringify({
 // //           type: 'timeframe_change',
 // //           timeframe: timeframe
 // //         }))
@@ -198,8 +184,7 @@
 // //     },
 // //
 // //     cleanupWebSocket() {
-// //       console.log('Cleaning up WebSocket connection')
-// //
+// // // //
 // //       if (this.pingInterval) {
 // //         clearInterval(this.pingInterval)
 // //         this.pingInterval = null
@@ -302,8 +287,7 @@
 //
 //     setTimeframe(timeframe) {
 //       if (this.timeframe === timeframe) return
-//       console.log(`Setting timeframe to ${timeframe}`)
-//       this.timeframe = timeframe
+// //       this.timeframe = timeframe
 //       if (this.selectedSymbol) {
 //         this.fetchMarketAnalysis(this.selectedSymbol, timeframe)
 //         this.sendTimeframeUpdate(timeframe)
@@ -319,12 +303,10 @@
 //       const wsUrl = `${protocol}//${host}/api/v1/ws/market/${symbol}`
 //
 //       try {
-//         console.log('Initializing WebSocket connection:', wsUrl)
-//         this.websocket = new WebSocket(wsUrl)
+// //         this.websocket = new WebSocket(wsUrl)
 //
 //         this.websocket.onopen = () => {
-//           console.log('WebSocket connected successfully')
-//           this.wsConnected = true
+// //           this.wsConnected = true
 //           this.startPingInterval()
 //         }
 //
@@ -333,8 +315,7 @@
 //             const data = JSON.parse(event.data)
 //             switch (data.type) {
 //               case 'market_update':
-//                 console.log('Received market update')
-//                 this.handleMarketUpdate(data)
+// //                 this.handleMarketUpdate(data)
 //                 break
 //               case 'pong':
 //                 this.lastPongTime = Date.now()
@@ -343,8 +324,7 @@
 //                 console.error('WebSocket error message:', data.message)
 //                 break
 //               default:
-//                 console.log('Received unknown message type:', data.type)
-//             }
+// //             }
 //           } catch (error) {
 //             console.error('Error processing WebSocket message:', error)
 //           }
@@ -356,12 +336,10 @@
 //         }
 //
 //         this.websocket.onclose = () => {
-//           console.log('WebSocket disconnected, cleaning up')
-//           this.wsConnected = false
+// //           this.wsConnected = false
 //           this.cleanupWebSocket()
 //
-//           console.log('Attempting to reconnect in 5 seconds...')
-//           setTimeout(() => {
+// //           setTimeout(() => {
 //             if (this.selectedSymbol) {
 //               this.initializeWebSocket(this.selectedSymbol)
 //             }
@@ -377,20 +355,16 @@
 //     handleMarketUpdate(data) {
 //       if (data.data) {
 //         this.marketData = data.data
-//         console.log('Updated market data:', this.marketData.length, 'points')
-//       }
+// //       }
 //       if (data.technical) {
 //         this.technicalIndicators = data.technical
-//         console.log('Updated technical indicators')
-//       }
+// //       }
 //       if (data.patterns) {
 //         this.patterns = data.patterns
-//         console.log('Updated patterns:', this.patterns.length)
-//       }
+// //       }
 //       if (data.signals) {
 //         this.signals = data.signals
-//         console.log('Updated signals:', this.signals.length)
-//       }
+// //       }
 //       if (data.currency) {
 //         this.currency = data.currency
 //         this.currencySymbol = data.currencySymbol || '$'
@@ -404,13 +378,11 @@
 //
 //       this.pingInterval = setInterval(() => {
 //         if (this.websocket?.readyState === WebSocket.OPEN) {
-//           console.log('Sending ping')
-//           this.websocket.send(JSON.stringify({ type: 'ping' }))
+// //           this.websocket.send(JSON.stringify({ type: 'ping' }))
 //
 //           // Check if we haven't received a pong in 45 seconds
 //           if (this.lastPongTime && Date.now() - this.lastPongTime > 45000) {
-//             console.log('No pong received, reconnecting...')
-//             this.cleanupWebSocket()
+// //             this.cleanupWebSocket()
 //             this.initializeWebSocket(this.selectedSymbol)
 //           }
 //         }
@@ -419,8 +391,7 @@
 //
 //     sendTimeframeUpdate(timeframe) {
 //       if (this.websocket?.readyState === WebSocket.OPEN) {
-//         console.log('Sending timeframe update:', timeframe)
-//         this.websocket.send(JSON.stringify({
+// //         this.websocket.send(JSON.stringify({
 //           type: 'timeframe_change',
 //           timeframe: timeframe
 //         }))
@@ -428,8 +399,7 @@
 //     },
 //
 //     cleanupWebSocket() {
-//       console.log('Cleaning up WebSocket connection')
-//
+// //
 //       if (this.pingInterval) {
 //         clearInterval(this.pingInterval)
 //         this.pingInterval = null
@@ -534,7 +504,6 @@ export const useMarketStore = defineStore('market', {
       this.error = null;
 
       try {
-        console.log(`Fetching market analysis for ${symbol} with timeframe ${timeframe}`);
         const response = await axios.get(`/api/v1/market/analysis/${symbol}`, {
           params: {
             timeframe: timeframe || this.timeframe,
@@ -553,8 +522,6 @@ export const useMarketStore = defineStore('market', {
           this.timeframe = timeframe || this.timeframe;
 
           // Debugging: Überprüfe die Antwort von der API
-          console.log("API Response - Currency:", response.data.currency); // Soll 'JPY' anzeigen
-          console.log("API Response - Currency Symbol:", response.data.currencySymbol); // Soll '¥' anzeigen
 
           // Setze Währung und Symbol
           if (response.data.currency && response.data.currencySymbol) {
@@ -568,8 +535,6 @@ export const useMarketStore = defineStore('market', {
           }
 
           // Debugging: Überprüfe gesetzte Werte
-          console.log('Currency:', this.currency);
-          console.log('Currency Symbol:', this.currencySymbol);
         }
       } catch (error) {
         console.error('Error fetching market analysis:', error);
@@ -581,7 +546,6 @@ export const useMarketStore = defineStore('market', {
 
     setTimeframe(timeframe) {
       if (this.timeframe === timeframe) return
-      console.log(`Setting timeframe to ${timeframe}`)
       this.timeframe = timeframe
       if (this.selectedSymbol) {
         this.fetchMarketData(this.selectedSymbol, timeframe)
@@ -599,11 +563,9 @@ export const useMarketStore = defineStore('market', {
       const wsUrl = `${protocol}//${host}/api/v1/ws/market/${symbol}`
 
       try {
-        console.log('Initializing WebSocket connection:', wsUrl)
         this.websocket = new WebSocket(wsUrl)
 
         this.websocket.onopen = () => {
-          console.log('WebSocket connected successfully')
           this.wsConnected = true
           this.startPingInterval()
         }
@@ -613,7 +575,6 @@ export const useMarketStore = defineStore('market', {
             const data = JSON.parse(event.data)
             switch (data.type) {
               case 'market_update':
-                console.log('Received market update')
                 this.handleMarketUpdate(data)
                 break
               case 'pong':
@@ -623,7 +584,6 @@ export const useMarketStore = defineStore('market', {
                 console.error('WebSocket error message:', data.message)
                 break
               default:
-                console.log('Received unknown message type:', data.type)
             }
           } catch (error) {
             console.error('Error processing WebSocket message:', error)
@@ -636,11 +596,9 @@ export const useMarketStore = defineStore('market', {
         }
 
         this.websocket.onclose = () => {
-          console.log('WebSocket disconnected, cleaning up')
           this.wsConnected = false
           this.cleanupWebSocket()
 
-          console.log('Attempting to reconnect in 5 seconds...')
           setTimeout(() => {
             if (this.selectedSymbol) {
               this.initializeWebSocket(this.selectedSymbol)
@@ -657,22 +615,17 @@ export const useMarketStore = defineStore('market', {
     handleMarketUpdate(data) {
       if (data.data) {
         this.marketData = data.data
-        console.log('Updated market data:', this.marketData.length, 'points')
       }
       if (data.technical) {
         this.technicalIndicators = data.technical
-        console.log('Updated technical indicators')
       }
       if (data.patterns) {
         this.patterns = data.patterns
-        console.log('Updated patterns:', this.patterns.length)
       }
       if (data.signals) {
         this.signals = data.signals
-        console.log('Updated signals:', this.signals.length)
       }
       if (data.currency) {
-        console.log('WebSocket Currency:', data.currency); // Debugging
         this.currency = data.currency
         this.currencySymbol = data.currencySymbol || '$'
       }
@@ -685,12 +638,10 @@ export const useMarketStore = defineStore('market', {
 
       this.pingInterval = setInterval(() => {
         if (this.websocket?.readyState === WebSocket.OPEN) {
-          console.log('Sending ping')
           this.websocket.send(JSON.stringify({ type: 'ping' }))
 
           // Check if we haven't received a pong in 45 seconds
           if (this.lastPongTime && Date.now() - this.lastPongTime > 45000) {
-            console.log('No pong received, reconnecting...')
             this.cleanupWebSocket()
             this.initializeWebSocket(this.selectedSymbol)
           }
@@ -700,7 +651,6 @@ export const useMarketStore = defineStore('market', {
 
     sendTimeframeUpdate(timeframe) {
       if (this.websocket?.readyState === WebSocket.OPEN) {
-        console.log('Sending timeframe update:', timeframe)
         this.websocket.send(JSON.stringify({
           type: 'timeframe_change',
           timeframe: timeframe
@@ -709,7 +659,6 @@ export const useMarketStore = defineStore('market', {
     },
 
     cleanupWebSocket() {
-      console.log('Cleaning up WebSocket connection')
 
       if (this.pingInterval) {
         clearInterval(this.pingInterval)

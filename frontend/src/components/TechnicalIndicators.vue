@@ -163,10 +163,23 @@
         <!-- RSI Indikator -->
         <div v-if="data?.rsi" class="border-b pb-4">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-medium">RSI</span>
-            <span :class="getRSIColor(data.rsi)">
-              {{ formatNumber(data.rsi) }}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">RSI</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Relative Strength Index (0-100). Über 70 = überkauft, unter 30 = überverkauft. Misst Momentum der Preisbewegungen.
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span :class="getRSIColor(data.rsi)" class="text-lg font-bold">
+                {{ formatNumber(data.rsi) }}
+              </span>
+              <div class="text-xs text-muted-foreground">
+                {{ getRSISignal(data.rsi) }}
+              </div>
+            </div>
           </div>
           <div class="relative h-2 mb-1">
             <div class="absolute w-full h-full bg-muted rounded-full"></div>
@@ -179,18 +192,28 @@
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 30%"></div>
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 70%"></div>
           </div>
-          <p class="text-sm text-muted-foreground mt-1">
-            {{ getRSISignal(data.rsi) }}
-          </p>
         </div>
 
         <!-- MACD Indikator -->
         <div v-if="data?.macd != null" class="border-b pb-4">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-medium">MACD</span>
-            <span :class="getMACDColor(data.macd, data.macd_signal)">
-              {{ formatNumber(data.macd) }}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">MACD</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Moving Average Convergence Divergence. Differenz zwischen 12- und 26-Tage EMA. Positive Werte = bullisch, negative = bärisch.
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span :class="getMACDColor(data.macd, data.macd_signal)" class="text-lg font-bold">
+                {{ formatNumber(data.macd) }}
+              </span>
+              <div class="text-xs text-muted-foreground">
+                Signal: {{ formatNumber(data.macd_signal) }}
+              </div>
+            </div>
           </div>
           <div class="relative h-2 mb-1">
             <div class="absolute w-full h-full bg-muted rounded-full"></div>
@@ -206,33 +229,60 @@
             <!-- Mittellinie -->
             <div class="absolute h-full w-px bg-muted-foreground/50" style="left: 50%"></div>
           </div>
-          <div class="flex justify-between text-sm text-muted-foreground mt-1">
-            <span>Signal: {{ formatNumber(data.macd_signal) }}</span>
-            <span>{{ getMACDSignal(data.macd, data.macd_signal) }}</span>
+          <div class="text-sm text-muted-foreground mt-1">
+            {{ getMACDSignal(data.macd, data.macd_signal) }}
           </div>
         </div>
 
         <!-- Moving Averages -->
         <div v-if="data?.sma_20 != null" class="pt-2">
           <div class="flex justify-between items-center mb-3">
-            <span class="font-medium">Moving Averages</span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Moving Averages</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Gleitende Durchschnitte glätten Preisschwankungen. SMA = Simple, EMA = Exponential (reagiert schneller auf Änderungen).
+                </div>
+              </div>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <span class="text-sm text-muted-foreground">SMA20</span>
-              <p class="font-medium">{{ currencySymbol }}{{ formatNumber(data.sma_20) }}</p>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm text-muted-foreground">SMA20</span>
+                <div class="text-xs text-muted-foreground">
+                  {{ currentPrice > data.sma_20 ? '↑' : '↓' }} {{ formatNumber(Math.abs(((currentPrice - data.sma_20) / data.sma_20) * 100)) }}%
+                </div>
+              </div>
+              <p class="font-medium text-lg">{{ currencySymbol }}{{ formatNumber(data.sma_20) }}</p>
             </div>
             <div v-if="data?.sma_50 != null">
-              <span class="text-sm text-muted-foreground">SMA50</span>
-              <p class="font-medium">{{ currencySymbol }}{{ formatNumber(data.sma_50) }}</p>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm text-muted-foreground">SMA50</span>
+                <div class="text-xs text-muted-foreground">
+                  {{ currentPrice > data.sma_50 ? '↑' : '↓' }} {{ formatNumber(Math.abs(((currentPrice - data.sma_50) / data.sma_50) * 100)) }}%
+                </div>
+              </div>
+              <p class="font-medium text-lg">{{ currencySymbol }}{{ formatNumber(data.sma_50) }}</p>
             </div>
             <div v-if="data?.sma_200 != null">
-              <span class="text-sm text-muted-foreground">SMA200</span>
-              <p class="font-medium">{{ currencySymbol }}{{ formatNumber(data.sma_200) }}</p>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm text-muted-foreground">SMA200</span>
+                <div class="text-xs text-muted-foreground">
+                  {{ currentPrice > data.sma_200 ? '↑' : '↓' }} {{ formatNumber(Math.abs(((currentPrice - data.sma_200) / data.sma_200) * 100)) }}%
+                </div>
+              </div>
+              <p class="font-medium text-lg">{{ currencySymbol }}{{ formatNumber(data.sma_200) }}</p>
             </div>
             <div v-if="data?.ema_12 != null">
-              <span class="text-sm text-muted-foreground">EMA12</span>
-              <p class="font-medium">{{ currencySymbol }}{{ formatNumber(data.ema_12) }}</p>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm text-muted-foreground">EMA12</span>
+                <div class="text-xs text-muted-foreground">
+                  {{ currentPrice > data.ema_12 ? '↑' : '↓' }} {{ formatNumber(Math.abs(((currentPrice - data.ema_12) / data.ema_12) * 100)) }}%
+                </div>
+              </div>
+              <p class="font-medium text-lg">{{ currencySymbol }}{{ formatNumber(data.ema_12) }}</p>
             </div>
           </div>
         </div>
@@ -240,11 +290,24 @@
         <!-- Stochastic Oscillator -->
         <div v-if="data?.stoch_k != null" class="border-b pb-4">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-medium">Stochastic</span>
-            <div class="flex gap-2">
-              <span :class="getStochColor(data.stoch_k)">{{ formatNumber(data.stoch_k) }}%</span>
-              <span class="text-muted-foreground">/</span>
-              <span class="text-muted-foreground">{{ formatNumber(data.stoch_d) }}%</span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Stochastic</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Vergleicht Schlusskurs mit 14-Tage Range. K% = %K, D% = 3-Tage Durchschnitt. Über 80 = überkauft, unter 20 = überverkauft.
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="flex gap-2">
+                <span :class="getStochColor(data.stoch_k)" class="text-lg font-bold">{{ formatNumber(data.stoch_k) }}%</span>
+                <span class="text-muted-foreground">/</span>
+                <span class="text-muted-foreground">{{ formatNumber(data.stoch_d) }}%</span>
+              </div>
+              <div class="text-xs text-muted-foreground">
+                {{ getStochSignal(data.stoch_k, data.stoch_d) }}
+              </div>
             </div>
           </div>
           <div class="relative h-2 mb-1">
@@ -257,18 +320,28 @@
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 20%"></div>
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 80%"></div>
           </div>
-          <p class="text-sm text-muted-foreground mt-1">
-            {{ getStochSignal(data.stoch_k, data.stoch_d) }}
-          </p>
         </div>
 
         <!-- Williams %R -->
         <div v-if="data?.williams_r != null" class="border-b pb-4">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-medium">Williams %R</span>
-            <span :class="getWilliamsColor(data.williams_r)">
-              {{ formatNumber(data.williams_r) }}%
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Williams %R</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Momentum-Oszillator (-100 bis 0). Über -20 = überkauft, unter -80 = überverkauft. Ähnlich wie Stochastic, aber mit negativen Werten.
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span :class="getWilliamsColor(data.williams_r)" class="text-lg font-bold">
+                {{ formatNumber(data.williams_r) }}%
+              </span>
+              <div class="text-xs text-muted-foreground">
+                {{ getWilliamsSignal(data.williams_r) }}
+              </div>
+            </div>
           </div>
           <div class="relative h-2 mb-1">
             <div class="absolute w-full h-full bg-muted rounded-full"></div>
@@ -280,18 +353,28 @@
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 20%"></div>
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 80%"></div>
           </div>
-          <p class="text-sm text-muted-foreground mt-1">
-            {{ getWilliamsSignal(data.williams_r) }}
-          </p>
         </div>
 
         <!-- CCI -->
         <div v-if="data?.cci != null" class="border-b pb-4">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-medium">CCI</span>
-            <span :class="getCCIColor(data.cci)">
-              {{ formatNumber(data.cci) }}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">CCI</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Commodity Channel Index misst Abweichung vom typischen Preis. Über +100 = überkauft, unter -100 = überverkauft. Unbegrenzte Skala.
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span :class="getCCIColor(data.cci)" class="text-lg font-bold">
+                {{ formatNumber(data.cci) }}
+              </span>
+              <div class="text-xs text-muted-foreground">
+                {{ getCCISignal(data.cci) }}
+              </div>
+            </div>
           </div>
           <div class="relative h-2 mb-1">
             <div class="absolute w-full h-full bg-muted rounded-full"></div>
@@ -303,18 +386,28 @@
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 25%"></div>
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 75%"></div>
           </div>
-          <p class="text-sm text-muted-foreground mt-1">
-            {{ getCCISignal(data.cci) }}
-          </p>
         </div>
 
         <!-- ADX -->
         <div v-if="data?.adx != null" class="border-b pb-4">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-medium">ADX</span>
-            <span :class="getADXColor(data.adx)">
-              {{ formatNumber(data.adx) }}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">ADX</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Average Directional Index misst Trendstärke (0-100). Über 25 = starker Trend, unter 20 = schwacher Trend. +DI/-DI zeigen Trendrichtung.
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span :class="getADXColor(data.adx)" class="text-lg font-bold">
+                {{ formatNumber(data.adx) }}
+              </span>
+              <div class="text-xs text-muted-foreground">
+                {{ data.adx > 25 ? 'Starker Trend' : data.adx > 20 ? 'Moderater Trend' : 'Schwacher Trend' }}
+              </div>
+            </div>
           </div>
           <div class="relative h-2 mb-1">
             <div class="absolute w-full h-full bg-muted rounded-full"></div>
@@ -327,32 +420,60 @@
             <div class="absolute h-full w-px bg-muted-foreground/30" style="left: 50%"></div>
           </div>
           <div class="flex justify-between text-sm text-muted-foreground mt-1">
-            <span>+DI: {{ formatNumber(data.plus_di) }}</span>
-            <span>-DI: {{ formatNumber(data.minus_di) }}</span>
+            <span>+DI: {{ formatNumber(data.plus_di) }} ({{ data.plus_di > data.minus_di ? '↑' : '↓' }})</span>
+            <span>-DI: {{ formatNumber(data.minus_di) }} ({{ data.minus_di > data.plus_di ? '↑' : '↓' }})</span>
           </div>
         </div>
 
         <!-- Bollinger Bands -->
         <div v-if="data?.bb_upper != null" class="border-b pb-4">
           <div class="flex justify-between items-center mb-3">
-            <span class="font-medium">Bollinger Bands</span>
-            <span class="text-sm text-muted-foreground">{{ formatNumber(data.bb_percent * 100) }}%</span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Bollinger Bands</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Volatilitäts-Indikator mit 3 Linien: SMA20 ± 2 Standardabweichungen. Preis nahe oberer Band = überkauft, nahe unterer Band = überverkauft.
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-lg font-bold">{{ formatNumber(data.bb_percent * 100) }}%</span>
+              <div class="text-xs text-muted-foreground">
+                Position in Band
+              </div>
+            </div>
           </div>
           <div class="space-y-2">
-            <div class="flex justify-between">
-              <span class="text-sm text-muted-foreground">Upper</span>
-              <span class="font-medium">{{ currencySymbol }}{{ formatNumber(data.bb_upper) }}</span>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-muted-foreground">Upper Band</span>
+              <div class="text-right">
+                <span class="font-medium text-lg">{{ currencySymbol }}{{ formatNumber(data.bb_upper) }}</span>
+                <div class="text-xs text-muted-foreground">
+                  +{{ formatNumber(((data.bb_upper - currentPrice) / currentPrice) * 100) }}%
+                </div>
+              </div>
             </div>
-            <div class="flex justify-between">
-              <span class="text-sm text-muted-foreground">Middle</span>
-              <span class="font-medium">{{ currencySymbol }}{{ formatNumber(data.bb_middle) }}</span>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-muted-foreground">Middle (SMA20)</span>
+              <div class="text-right">
+                <span class="font-medium text-lg">{{ currencySymbol }}{{ formatNumber(data.bb_middle) }}</span>
+                <div class="text-xs text-muted-foreground">
+                  {{ currentPrice > data.bb_middle ? '+' : '' }}{{ formatNumber(((currentPrice - data.bb_middle) / data.bb_middle) * 100) }}%
+                </div>
+              </div>
             </div>
-            <div class="flex justify-between">
-              <span class="text-sm text-muted-foreground">Lower</span>
-              <span class="font-medium">{{ currencySymbol }}{{ formatNumber(data.bb_lower) }}</span>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-muted-foreground">Lower Band</span>
+              <div class="text-right">
+                <span class="font-medium text-lg">{{ currencySymbol }}{{ formatNumber(data.bb_lower) }}</span>
+                <div class="text-xs text-muted-foreground">
+                  {{ formatNumber(((currentPrice - data.bb_lower) / currentPrice) * 100) }}%
+                </div>
+              </div>
             </div>
             <div class="text-sm text-muted-foreground">
-              Width: {{ formatNumber(data.bb_width * 100) }}%
+              Band Width: {{ formatNumber(data.bb_width * 100) }}% ({{ formatNumber((data.bb_upper - data.bb_lower) / currentPrice * 100) }}% vom Preis)
             </div>
           </div>
         </div>
@@ -360,11 +481,21 @@
         <!-- ATR -->
         <div v-if="data?.atr != null" class="pt-2">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-medium">ATR</span>
-            <span class="font-medium">{{ currencySymbol }}{{ formatNumber(data.atr) }}</span>
-          </div>
-          <div class="text-sm text-muted-foreground">
-            Volatility: {{ formatNumber((data.atr / currentPrice) * 100) }}%
+            <div class="flex items-center gap-2">
+              <span class="font-medium">ATR</span>
+              <div class="group relative">
+                <Info class="h-4 w-4 text-muted-foreground cursor-help" />
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-64 z-10">
+                  Average True Range misst Volatilität. Höhere Werte = mehr Volatilität. Wichtig für Stop-Loss und Position Sizing.
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="font-medium text-lg">{{ currencySymbol }}{{ formatNumber(data.atr) }}</span>
+              <div class="text-xs text-muted-foreground">
+                {{ formatNumber((data.atr / currentPrice) * 100) }}% Volatilität
+              </div>
+            </div>
           </div>
         </div>
 
@@ -380,7 +511,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { AlertCircle } from 'lucide-vue-next'
+import { AlertCircle, Info } from 'lucide-vue-next'
 import { useMarketStore } from '@/stores/market'
 
 const marketStore = useMarketStore()

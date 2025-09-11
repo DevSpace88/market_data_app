@@ -18,7 +18,6 @@ class WebSocketManager:
 
     async def connect(self, websocket: WebSocket, symbol: str):
         """Verbindung für ein Symbol herstellen"""
-        logger.debug(f"New connection request for symbol {symbol}")
         try:
             await websocket.accept()
             if symbol not in self._connections:
@@ -39,11 +38,9 @@ class WebSocketManager:
 
     async def disconnect(self, websocket: WebSocket, symbol: str):
         """Verbindung für ein Symbol trennen"""
-        logger.debug(f"Disconnecting {symbol}")
         try:
             if symbol in self._connections:
                 self._connections[symbol].discard(websocket)
-                logger.debug(f"Removed connection for {symbol}")
 
                 # Wenn keine Verbindungen mehr, Task beenden
                 if not self._connections[symbol]:
@@ -75,7 +72,6 @@ class WebSocketManager:
         # Cleanup tote Verbindungen
         for dead in dead_connections:
             self._connections[symbol].discard(dead)
-            logger.debug(f"Removed dead connection for {symbol}")
 
     async def _send_initial_data(self, websocket: WebSocket, symbol: str):
         """Initiales Datenpaket senden"""
@@ -98,7 +94,6 @@ class WebSocketManager:
         try:
             while True:
                 if symbol not in self._connections:
-                    logger.debug(f"No more connections for {symbol}, stopping updates")
                     break
 
                 try:
@@ -128,7 +123,6 @@ class WebSocketManager:
                                 "signals": signals
                             }
                         )
-                        logger.debug(f"Sent update for {symbol}")
 
                 except Exception as e:
                     logger.error(f"Error in update loop for {symbol}: {str(e)}")
