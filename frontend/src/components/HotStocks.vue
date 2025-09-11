@@ -300,3 +300,20 @@ onMounted(() => {
   fetchHotStocks()
 })
 </script>
+
+<style scoped>
+.fade-in-row {
+  animation: fadeInRow 0.5s ease-in-out;
+}
+
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+</style>

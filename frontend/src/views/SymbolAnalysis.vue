@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watchEffect } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMarketStore } from '@/stores/market'
 import { useAuthStore } from '@/stores/auth'
@@ -224,6 +224,11 @@ onMounted(() => {
   fetchData()
   marketStore.initializeWebSocket(symbol.value)
   checkWatchlistStatus()
+})
+
+onUnmounted(() => {
+  // Clean up WebSocket when leaving SymbolAnalysis view
+  marketStore.cleanupWebSocket()
 })
 
 watchEffect(() => {

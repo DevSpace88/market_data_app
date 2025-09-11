@@ -556,6 +556,12 @@ export const useMarketStore = defineStore('market', {
 
     initializeWebSocket(symbol) {
       if (!symbol) return
+      
+      // Only initialize WebSocket if we're in SymbolAnalysis view
+      if (!window.location.pathname.includes('/symbol/')) {
+        return
+      }
+      
       this.cleanupWebSocket()
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -599,8 +605,9 @@ export const useMarketStore = defineStore('market', {
           this.wsConnected = false
           this.cleanupWebSocket()
 
+          // Only auto-reconnect if still in SymbolAnalysis view
           setTimeout(() => {
-            if (this.selectedSymbol) {
+            if (this.selectedSymbol && window.location.pathname.includes('/symbol/')) {
               this.initializeWebSocket(this.selectedSymbol)
             }
           }, 5000)
