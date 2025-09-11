@@ -1,6 +1,6 @@
 # Market Analysis Platform
 
-A real-time market analysis platform with technical indicators and AI-powered insights.
+Real-time market analysis with technical indicators, patterns, signals, risk metrics and AI-powered insights. Backend runs on port 8000, frontend on 5173.
 
 ## Features
 
@@ -24,9 +24,10 @@ source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 cd backend
 pip install -r requirements.txt
 
-# Set up environment variables
+# Optional: Environment variables
+# SECRET_KEY and DB are required; AI keys are configured in the app UI.
 cp .env.example .env
-# Edit .env with your API keys
+vi .env
 
 # Start the server
 uvicorn app.main:app --reload
@@ -45,17 +46,23 @@ npx shadcn-vue add button card input badge progress
 
 # Start development server
 npm run dev
+
+# Optional: disable WebSockets during dev to avoid console noise
+# create .env.local with:
+# VITE_ENABLE_WS=false
 ```
 
-## Environment Variables
+## Environment Variables (Backend)
 
-Create a `.env` file in the backend directory:
+Create a `.env` in `backend/` (no OpenAI key required here):
 
 ```env
-OPENAI_API_KEY=your_openai_api_key
 SECRET_KEY=your_secret_key
 DATABASE_URL=sqlite:///./market_analysis.db
+BACKEND_CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 ```
+
+AI Provider keys (OpenAI, DeepSeek, etc.) werden in der App unter „AI Settings“ gespeichert (plaintext) und serverseitig sicher verwendet. Kein Key in `.env` nötig.
 
 ## Usage
 
@@ -67,9 +74,9 @@ DATABASE_URL=sqlite:///./market_analysis.db
 6. Use the search bar to find stocks
 7. View real-time data and analysis
 8. Add symbols to your watchlist
-9. Login with example user 
-user: admin@example.com
-password: admin123
+9. Login (Default Admin)
+   - username: admin
+   - password: admin123
 
 ## API Documentation
 
@@ -84,6 +91,12 @@ Access the interactive API documentation at `http://localhost:8000/docs`
 - yfinance
 - pandas-ta
 
+### Quant Features
+- Indicators: RSI, MACD, SMA/EMA, Stochastic, Williams %R, CCI, ADX, Bollinger, ATR, OBV, VROC, AD-Line, Pivot Points
+- Patterns: Candlestick, Chart, Trend, Volume, Support/Resistance
+- Signals: short/medium/long-term with strength
+- Risk: volatility, drawdown, momentum, liquidity, S/R, overall score
+
 ### Frontend
 - Vue 3
 - Vite
@@ -92,3 +105,14 @@ Access the interactive API documentation at `http://localhost:8000/docs`
 - ECharts
 - TailwindCSS
 
+## Caching
+- Frontend: market data (2 min), AI analysis (10 min), watchlist (1 min), hot stocks (5 min)
+- Backend: AI analysis 24h, hot stocks 5–15 min
+
+## Internationalization (i18n)
+- Deutsch/Englisch umschaltbar in der Navbar
+- Default wird aus `localStorage.language` gelesen
+
+## WebSockets
+- Endpoint: `ws://localhost:8000/api/v1/ws/market/{symbol}?token=JWT`
+- Im Dev standardmäßig per Flag deaktivierbar: `VITE_ENABLE_WS=false`
