@@ -48,10 +48,14 @@
       </div>
       <TechnicalIndicators
           :data="technicalIndicators?.current"
+          :currency="marketStore.currency"
+          :currency-symbol="marketStore.currencySymbol"
+          :current-price="currentPrice"
           @indicator-toggle="handleIndicatorToggle"
       />
       <SignalList :signals="signals"/>
       <PatternList :patterns="patterns"/>
+      <RiskMetrics :data="riskMetrics" />
       <div class="lg:col-span-2">
         <AIAnalysis
           :analysis="aiAnalysis"
@@ -75,6 +79,7 @@ import PriceChart from '@/components/PriceChart.vue'
 import TechnicalIndicators from '@/components/TechnicalIndicators.vue'
 import SignalList from '@/components/SignalList.vue'
 import PatternList from '@/components/PatternList.vue'
+import RiskMetrics from '@/components/RiskMetrics.vue'
 import AIAnalysis from '@/components/AIAnalysis.vue'
 import ConnectionStatus from '@/components/ConnectionStatus.vue'
 
@@ -95,6 +100,7 @@ const marketData = computed(() => marketStore.marketData || [])
 const technicalIndicators = computed(() => marketStore.technicalIndicators || {})
 const patterns = computed(() => marketStore.patterns || [])
 const signals = computed(() => marketStore.signals || [])
+const riskMetrics = computed(() => marketStore.riskMetrics)
 const aiAnalysis = computed(() => marketStore.aiAnalysis)
 
 // Computed Property für aktive Indikatoren mit Werten

@@ -458,10 +458,16 @@ export const useMarketStore = defineStore('market', {
     technicalIndicators: {},
     patterns: [],
     signals: [],
+    riskMetrics: null,
     aiAnalysis: null,
     selectedSymbol: null,
     timeframe: '1D',
     loading: false,
+    loadingIndicators: false,
+    loadingPatterns: false,
+    loadingSignals: false,
+    loadingRiskMetrics: false,
+    loadingAI: false,
     error: null,
     websocket: null,
     wsConnected: false,
@@ -541,6 +547,7 @@ export const useMarketStore = defineStore('market', {
           this.technicalIndicators = response.data.technical_indicators || {};
           this.patterns = response.data.patterns || [];
           this.signals = response.data.signals || [];
+          this.riskMetrics = response.data.risk_metrics || null;
           this.aiAnalysis = response.data.ai_analysis || null;
           this.selectedSymbol = symbol;
           this.timeframe = timeframe || this.timeframe;
@@ -716,6 +723,67 @@ export const useMarketStore = defineStore('market', {
 
       this.wsConnected = false
       this.lastPongTime = null
+    },
+
+    // Separate actions for individual components
+    async fetchIndicators(symbol, timeframe = '1M') {
+      try {
+        this.loadingIndicators = true
+        const response = await axios.get(`/api/v1/market/indicators/${symbol}`, {
+          params: { timeframe }
+        })
+        this.technicalIndicators = response.data.technical_indicators || {}
+      } catch (error) {
+        console.error('Error fetching indicators:', error)
+        this.error = error.response?.data?.detail || 'Failed to fetch indicators'
+      } finally {
+        this.loadingIndicators = false
+      }
+    },
+
+    async fetchPatterns(symbol, timeframe = '1M') {
+      try {
+        this.loadingPatterns = true
+        const response = await axios.get(`/api/v1/market/patterns/${symbol}`, {
+          params: { timeframe }
+        })
+        this.patterns = response.data.patterns || []
+      } catch (error) {
+        console.error('Error fetching patterns:', error)
+        this.error = error.response?.data?.detail || 'Failed to fetch patterns'
+      } finally {
+        this.loadingPatterns = false
+      }
+    },
+
+    async fetchSignals(symbol, timeframe = '1M') {
+      try {
+        this.loadingSignals = true
+        const response = await axios.get(`/api/v1/market/signals/${symbol}`, {
+          params: { timeframe }
+        })
+        this.signals = response.data.signals || []
+      } catch (error) {
+        console.error('Error fetching signals:', error)
+        this.error = error.response?.data?.detail || 'Failed to fetch signals'
+      } finally {
+        this.loadingSignals = false
+      }
+    },
+
+    async fetchRiskMetrics(symbol, timeframe = '1M') {
+      try {
+        this.loadingRiskMetrics = true
+        const response = await axios.get(`/api/v1/market/risk-metrics/${symbol}`, {
+          params: { timeframe }
+        })
+        this.riskMetrics = response.data.risk_metrics || null
+      } catch (error) {
+        console.error('Error fetching risk metrics:', error)
+        this.error = error.response?.data?.detail || 'Failed to fetch risk metrics'
+      } finally {
+        this.loadingRiskMetrics = false
+      }
     }
   }
 })

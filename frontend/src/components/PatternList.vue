@@ -135,19 +135,23 @@
         <div v-for="pattern in uniquePatterns" :key="pattern.type"
              class="p-4 rounded-lg border hover:bg-muted/50 transition-colors">
           <div class="flex justify-between items-start">
-            <div>
-              <div class="flex items-center gap-2">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
                 <h4 class="font-medium">{{ pattern.type }}</h4>
                 <Badge :variant="getConfidenceVariant(pattern.confidence)">
                   {{ pattern.confidence }}%
                 </Badge>
+                <Badge :variant="getPatternCategoryVariant(pattern.type)" class="text-xs">
+                  {{ getPatternCategory(pattern.type) }}
+                </Badge>
               </div>
-              <p class="text-sm text-muted-foreground mt-1">
+              <p class="text-sm text-muted-foreground mb-2">
                 {{ pattern.description }}
               </p>
-            </div>
-            <div class="text-sm text-muted-foreground">
-              {{ formatTimestamp(pattern.timestamp) }}
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full" :class="getPatternColor(pattern.type)"></div>
+                <span class="text-xs text-muted-foreground">{{ formatTimestamp(pattern.timestamp) }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -201,6 +205,74 @@ const getConfidenceVariant = (confidence) => {
 const formatTimestamp = (timestamp) => {
   if (!timestamp) return ''
   return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZoneName: 'short' })
+}
+
+const getPatternCategory = (type) => {
+  const categories = {
+    // Candlestick Patterns
+    'Doji': 'Candlestick',
+    'Hammer': 'Candlestick',
+    'Shooting Star': 'Candlestick',
+    'Bullish Engulfing': 'Candlestick',
+    'Bearish Engulfing': 'Candlestick',
+    
+    // Chart Patterns
+    'Head and Shoulders': 'Chart',
+    'Double Top': 'Chart',
+    'Double Bottom': 'Chart',
+    'Ascending Triangle': 'Chart',
+    'Descending Triangle': 'Chart',
+    
+    // Trend Patterns
+    'Higher Highs/Lows': 'Trend',
+    'Lower Highs/Lows': 'Trend',
+    'Breakout': 'Trend',
+    
+    // Volume Patterns
+    'Volume Spike': 'Volume',
+    'Volume Divergence': 'Volume',
+    
+    // Support/Resistance Patterns
+    'Resistance Test': 'S/R',
+    'Support Test': 'S/R'
+  }
+  return categories[type] || 'Pattern'
+}
+
+const getPatternCategoryVariant = (type) => {
+  const category = getPatternCategory(type)
+  switch (category) {
+    case 'Candlestick':
+      return 'default'
+    case 'Chart':
+      return 'secondary'
+    case 'Trend':
+      return 'outline'
+    case 'Volume':
+      return 'destructive'
+    case 'S/R':
+      return 'secondary'
+    default:
+      return 'outline'
+  }
+}
+
+const getPatternColor = (type) => {
+  const category = getPatternCategory(type)
+  switch (category) {
+    case 'Candlestick':
+      return 'bg-blue-500'
+    case 'Chart':
+      return 'bg-purple-500'
+    case 'Trend':
+      return 'bg-green-500'
+    case 'Volume':
+      return 'bg-orange-500'
+    case 'S/R':
+      return 'bg-yellow-500'
+    default:
+      return 'bg-gray-500'
+  }
 }
 
 </script>
