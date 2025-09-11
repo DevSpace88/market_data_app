@@ -239,6 +239,7 @@ from .routes.market import router as market_router
 from .routes.admin import router as admin_router
 from .routes.websocket import router as websocket_router
 from .routes.watchlist import router as watchlist_router
+from .routes.ai_settings import router as ai_settings_router
 
 router = APIRouter()
 
@@ -248,3 +249,4 @@ router.include_router(market_router, prefix="/market", tags=["market"])
 router.include_router(admin_router, prefix="/admin", tags=["admin"])
 router.include_router(websocket_router, prefix="/ws", tags=["websocket"])
 router.include_router(watchlist_router, prefix="/watchlist", tags=["watchlist"])
+router.include_router(ai_settings_router, prefix="/ai-settings", tags=["ai-settings"])

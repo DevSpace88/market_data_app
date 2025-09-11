@@ -121,6 +121,7 @@ import axios from 'axios'
 import LoginView from '@/views/LoginView.vue'
 import MarketDashboard from '@/views/MarketDashboard.vue'
 import SymbolAnalysis from '@/views/SymbolAnalysis.vue'
+import AISettings from '@/views/AISettings.vue'
 import NotFound from '@/views/NotFound.vue'
 
 // Component für "Symbol nicht gefunden"
@@ -199,6 +200,12 @@ const router = createRouter({
       path: '/symbol-not-found/:symbol',
       name: 'symbol-not-found',
       component: SymbolNotFound,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/ai-settings',
+      name: 'ai-settings',
+      component: AISettings,
       meta: { requiresAuth: true }
     },
     {

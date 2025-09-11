@@ -294,7 +294,11 @@
         </Button>
 
         <!-- Auth Buttons -->
-        <div v-if="authStore.isAuthenticated">
+        <div v-if="authStore.isAuthenticated" class="flex items-center space-x-2">
+          <Button variant="outline" @click="router.push('/ai-settings')">
+            <Settings class="h-4 w-4 mr-2" />
+            Einstellungen
+          </Button>
           <Button variant="outline" @click="handleLogout">
             <LogOut class="h-4 w-4 mr-2" />
             Logout
@@ -313,6 +317,7 @@
     <div v-if="isMobileMenuOpen" class="sm:hidden absolute top-16 left-0 w-full bg-background p-4">
       <div class="flex flex-col space-y-2">
         <router-link to="/dashboard" class="text-lg py-2">Dashboard</router-link>
+        <router-link v-if="authStore.isAuthenticated" to="/ai-settings" class="text-lg py-2">Einstellungen</router-link>
         <Button variant="outline" @click="toggleTheme" class="w-full py-2">
           <Sun v-if="isDark" class="h-5 w-5" />
           <Moon v-else class="h-5 w-5" />
@@ -340,7 +345,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
-import { BarChart2, Sun, Moon, LogIn, LogOut, Loader2 } from 'lucide-vue-next'
+import { BarChart2, Sun, Moon, LogIn, LogOut, Loader2, Settings, Menu } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useDebounce } from '@/composables/useDebounce'
@@ -355,6 +360,7 @@ const searchResults = ref([])
 const showDropdown = ref(false)  // Dropdown zu Beginn auf false setzen
 const isLoading = ref(false)
 const isDark = ref(themeStore.isDark)
+const isMobileMenuOpen = ref(false)
 
 // Methode, um das Dropdown anzuzeigen oder zu verstecken
 const toggleDropdown = (state) => {
@@ -425,6 +431,10 @@ const handleLogout = () => {
 const toggleTheme = () => {
   themeStore.toggleTheme()
   isDark.value = themeStore.isDark
+}
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
 onMounted(() => {
