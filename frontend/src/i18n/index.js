@@ -143,6 +143,26 @@ const messages = {
     risk: {
       info: 'Risk metrics help assess investment risks. Low values = less risk, high values = more risk. Important for position sizing and risk management.'
     }
+    ,
+    // Footer
+    footer: {
+      appName: 'Market Data App',
+      tagline: 'Professional market data analysis with real-time data and AI insights.',
+      liveData: 'Live Data',
+      features: 'Features',
+      realtimeCharts: 'Real-time Charts',
+      aiAnalysis: 'AI Analysis',
+      watchlist: 'Watchlist',
+      hotStocks: 'Hot Stocks',
+      dataSources: 'Data Sources',
+      poweredBy: 'Powered by {provider}',
+      aiVia: 'AI via {provider}',
+      updatedEvery: 'Data updated every 15 minutes',
+      cacheStatus: 'Cache Status',
+      active: 'Active',
+      rights: 'All rights reserved.',
+      version: 'Version {version}'
+    }
   },
   
   de: {
@@ -286,6 +306,26 @@ const messages = {
     // Risk Info
     risk: {
       info: 'Risikokennzahlen helfen bei der Bewertung von Investitionsrisiken. Niedrige Werte = weniger Risiko, hohe Werte = mehr Risiko. Wichtig für Position Sizing und Risikomanagement.'
+    }
+    ,
+    // Footer
+    footer: {
+      appName: 'Market Data App',
+      tagline: 'Professionelle Marktdatenanalyse mit Echtzeitdaten und KI-gestützten Insights.',
+      liveData: 'Live Daten',
+      features: 'Features',
+      realtimeCharts: 'Echtzeit-Charts',
+      aiAnalysis: 'KI-Analyse',
+      watchlist: 'Watchlist',
+      hotStocks: 'Hot Stocks',
+      dataSources: 'Datenquellen',
+      poweredBy: 'Powered by {provider}',
+      aiVia: 'KI-Integration via {provider}',
+      updatedEvery: 'Daten werden alle 15 Minuten aktualisiert',
+      cacheStatus: 'Cache Status',
+      active: 'Aktiv',
+      rights: 'Alle Rechte vorbehalten.',
+      version: 'Version {version}'
     }
   }
 }
