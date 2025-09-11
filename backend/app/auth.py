@@ -509,7 +509,7 @@ from .models.user import User
 from .config import get_settings
 import logging
 import jwt  # Changed from jose
-from jwt.exceptions import InvalidTokenError  # Changed from JWTError
+from jwt.exceptions import DecodeError  # Changed from JWTDecodeError
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -557,7 +557,7 @@ async def get_current_user(
         logger.debug(f"User found in database: {user.username}")
         return user
 
-    except InvalidTokenError as e:  # Changed from JWTError
+    except DecodeError as e:  # Changed from JWTDecodeError
         logger.error(f"JWT Error during validation: {str(e)}")
         raise credentials_exception
 
@@ -611,5 +611,5 @@ async def verify_ws_token(token: str, db: Session = Depends(get_db)) -> Optional
 
         user = db.query(User).filter(User.username == username).first()
         return user
-    except InvalidTokenError:  # Changed from JWTError
+    except DecodeError:  # Changed from JWTDecodeError
         return None

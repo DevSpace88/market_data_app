@@ -67,6 +67,9 @@ DATABASE_URL=sqlite:///./market_analysis.db
 6. Use the search bar to find stocks
 7. View real-time data and analysis
 8. Add symbols to your watchlist
+9. Login with example user 
+user: admin@example.com
+password: admin123
 
 ## API Documentation
 
@@ -89,14 +92,3 @@ Access the interactive API documentation at `http://localhost:8000/docs`
 - ECharts
 - TailwindCSS
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-MIT
