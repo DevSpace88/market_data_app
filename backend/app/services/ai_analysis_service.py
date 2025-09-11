@@ -1,4 +1,4 @@
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate
 from datetime import datetime, timedelta
@@ -22,7 +22,7 @@ class MarketAIAnalysis:
         }
         self.cache_duration = timedelta(hours=1)
         self.search_tool = None
-        self.debug = True  # Debug-Modus standardmäßig aktiviert
+        self.debug = False  # Debug-Modus deaktiviert für saubere Logs
 
         try:
             from langchain_community.tools import DuckDuckGoSearchRun

@@ -251,7 +251,7 @@
       <div v-if="authStore.isAuthenticated" class="relative hidden sm:block w-96">
         <Input
           v-model="searchQuery"
-          placeholder="Suche Symbol (z.B. AAPL, GOOGL)..."
+          :placeholder="t('dashboard.searchPlaceholder')"
           class="w-full"
           @input="handleSearchInput"
           @focus="handleFocus"
@@ -285,8 +285,11 @@
         </div>
       </div>
 
-      <!-- Rechte Seite: Theme Toggle und Auth Buttons -->
+      <!-- Rechte Seite: Language Toggle, Theme Toggle und Auth Buttons -->
       <div class="flex items-center space-x-2">
+        <!-- Language Toggle -->
+        <LanguageToggle />
+        
         <!-- Theme Toggle Button -->
         <Button variant="outline" size="icon" @click="toggleTheme">
           <Sun v-if="isDark" class="h-5 w-5" />
@@ -297,17 +300,17 @@
         <div v-if="authStore.isAuthenticated" class="flex items-center space-x-2">
           <Button variant="outline" @click="router.push('/ai-settings')">
             <Settings class="h-4 w-4 mr-2" />
-            Einstellungen
+            {{ t('nav.settings') }}
           </Button>
           <Button variant="outline" @click="handleLogout">
             <LogOut class="h-4 w-4 mr-2" />
-            Logout
+            {{ t('nav.logout') }}
           </Button>
         </div>
         <div v-else>
           <Button @click="router.push('/login')" class="px-4 py-2">
             <LogIn class="h-4 w-4 mr-2" />
-            Login
+            {{ t('nav.login') }}
           </Button>
         </div>
       </div>
@@ -343,15 +346,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
 import { BarChart2, Sun, Moon, LogIn, LogOut, Loader2, Settings, Menu } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useDebounce } from '@/composables/useDebounce'
+import LanguageToggle from '@/components/LanguageToggle.vue'
 import axios from 'axios'
 
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 

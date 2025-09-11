@@ -47,6 +47,7 @@ import router from './router'
 import { createPinia } from 'pinia'
 import './assets/styles/main.css'
 import axios from 'axios'
+import i18n from './i18n'
 
 // Axios Konfiguration
 axios.defaults.baseURL = 'http://localhost:8000'
@@ -88,4 +89,10 @@ app.directive('click-outside', {
 
 app.use(router)
 app.use(createPinia())
+app.use(i18n)
+
+// Set initial locale from localStorage
+const savedLanguage = localStorage.getItem('language') || 'en'
+i18n.global.locale.value = savedLanguage
+
 app.mount('#app')

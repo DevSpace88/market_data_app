@@ -1,40 +1,13 @@
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h2 class="text-3xl font-bold">Market Dashboard</h2>
-      <!-- <div class="flex items-center gap-3">
-        <SymbolSearch :on-add="addToWatchlist" />
-      </div> -->
-    </div>
-
-    <!-- Watchlist Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Card
-        v-for="symbol in watchlist"
-        :key="symbol"
-        class="hover:shadow-lg transition-all cursor-pointer group"
-        @click="navigateToSymbol(symbol)"
-      >
-        <CardHeader class="pb-4">
-          <div class="flex justify-between items-center">
-            <CardTitle class="text-lg">{{ symbol }}</CardTitle>
-            <svg class="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-          </div>
-        </CardHeader>
-      </Card>
-    </div>
-
-    <!-- Hot Stocks Table -->
-    <div class="mt-8">
-      <HotStocks @watchlist-changed="fetchCustomWatchlist" />
+      <h2 class="text-3xl font-bold">{{ t('dashboard.title') }}</h2>
     </div>
 
     <!-- Custom Watchlist Grid -->
     <div v-if="customWatchlist.length > 0" class="mt-8">
-      <h3 class="text-xl font-semibold mb-4">Meine Symbole</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <h3 class="text-xl font-semibold mb-4">{{ t('dashboard.mySymbols') }}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <Card
           v-for="item in customWatchlist"
           :key="item.id"
@@ -43,127 +16,110 @@
         >
           <CardHeader class="pb-4">
             <div class="flex justify-between items-center">
-              <div class="flex-1">
-                <CardTitle class="text-lg">{{ item.symbol }}</CardTitle>
-                <CardDescription class="text-sm text-muted-foreground">
-                  {{ item.display_name || 'Benutzerdefiniert' }}
+              <div class="flex-1 min-w-0">
+                <CardTitle class="text-lg truncate">{{ item.symbol }}</CardTitle>
+                <CardDescription class="text-sm text-muted-foreground truncate">
+                  {{ getDisplayName(item) }}
                 </CardDescription>
-                
-                <!-- Chart Icon mit Prozentanzeige -->
-                <div class="flex items-center gap-2 mt-2">
-                  <div class="relative w-12 h-8">
-                    <svg class="w-full h-full" viewBox="0 0 100 40" fill="none">
-                      <!-- Chart Background -->
-                      <rect width="100" height="40" fill="hsl(var(--muted))" rx="2"/>
-                      
-                      <!-- Chart Line -->
-                      <path 
-                        :d="getChartPath(item.symbol)" 
-                        stroke="currentColor" 
-                        stroke-width="2" 
-                        fill="none"
-                        :class="getChartColor(item.symbol)"
-                      />
-                      
-                      <!-- Data Points -->
-                      <circle 
-                        v-for="(point, index) in getChartPoints(item.symbol)" 
-                        :key="index"
-                        :cx="point.x" 
-                        :cy="point.y" 
-                        r="1.5" 
-                        :class="getChartColor(item.symbol)"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </div>
-                  
-                  <!-- Prozentanzeige -->
-                  <div class="flex items-center gap-1">
-                    <span 
-                      class="text-sm font-medium"
-                      :class="getPercentageColor(item.symbol)"
-                    >
-                      {{ getPercentageChange(item.symbol) }}
-                    </span>
-                    <svg 
-                      v-if="getPercentageChange(item.symbol).startsWith('+')" 
-                      class="w-3 h-3 text-green-500" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l9.2-9.2M17 17V7H7"/>
-                    </svg>
-                    <svg 
-                      v-else-if="getPercentageChange(item.symbol).startsWith('-')" 
-                      class="w-3 h-3 text-red-500" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 7l-9.2 9.2M7 7v10h10"/>
-                    </svg>
-                  </div>
-                </div>
               </div>
-              
-              <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-                <button
-                  @click.stop="removeFromWatchlist(item.id)"
-                  class="text-destructive hover:text-destructive/80 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                @click.stop="removeFromWatchlist(item.symbol)"
+                class="text-muted-foreground hover:text-destructive flex-shrink-0"
+                :title="t('dashboard.removeFromWatchlist')"
+              >
+                <Trash2 class="h-4 w-4" />
+              </Button>
             </div>
           </CardHeader>
+          <CardContent class="pt-0">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <!-- Mini Chart -->
+                <div class="w-16 h-8">
+                  <svg viewBox="0 0 100 40" class="w-full h-full">
+                    <path
+                      :d="getChartPath(item.symbol)"
+                      :class="getChartColor(item.symbol)"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <circle
+                      v-for="point in getChartPoints(item.symbol)"
+                      :key="point.x"
+                      :cx="point.x"
+                      :cy="point.y"
+                      r="1.5"
+                      :class="getChartColor(item.symbol)"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div class="text-sm font-medium" :class="getPercentageColor(item.symbol)">
+                  {{ getPercentageChange(item.symbol) }}
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-muted-foreground">{{ t('timeframes.1D') }}</div>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
+    </div>
+
+    <!-- Hot Stocks Table -->
+    <div class="mt-8">
+      <HotStocks @watchlist-changed="fetchCustomWatchlist" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-// import SymbolSearch from '@/components/SymbolSearch.vue'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Trash2 } from 'lucide-vue-next'
 import HotStocks from '@/components/HotStocks.vue'
+import axios from 'axios'
 
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
-
-// Standard-Beispiele wie vorher
-const watchlist = ref(['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA'])
 
 // Benutzerdefinierte Watchlist
 const customWatchlist = ref([])
 const isLoading = ref(false)
 const error = ref('')
-
-// Chart-Daten für Watchlist-Symbole
 const watchlistChartData = ref({})
 
+// Lade Watchlist beim Mount
+onMounted(async () => {
+  await fetchCustomWatchlist()
+})
+
+// Lade benutzerdefinierte Watchlist
 const fetchCustomWatchlist = async () => {
+  if (!authStore.isAuthenticated) return
+  
   try {
-    const response = await fetch('/api/v1/watchlist/', {
+    isLoading.value = true
+    const response = await axios.get('/api/v1/watchlist', {
       headers: {
         'Authorization': `Bearer ${authStore.token}`
       }
     })
+    customWatchlist.value = response.data
     
-      if (response.ok) {
-        customWatchlist.value = await response.json()
-        // Lade Chart-Daten für alle Symbole parallel
-        await loadWatchlistChartData()
-      }
+    // Lade Chart-Daten nach dem Laden der Watchlist
+    await loadWatchlistChartData()
   } catch (err) {
     console.error('Error fetching custom watchlist:', err)
     // Ignoriere Fehler, da die API möglicherweise nicht verfügbar ist
@@ -289,19 +245,36 @@ const getChartPoints = (symbol) => {
     return []
   }
   
-  const minPrice = Math.min(...closePrices)
-  const maxPrice = Math.max(...closePrices)
+  let minPrice, maxPrice
+  
+  if (points.length === 1) {
+    const point = points[0]
+    const openPrice = parseFloat(point.open || point.Open || 0) || 0
+    const closePrice = parseFloat(point.close || point.Close || 0) || 0
+    minPrice = Math.min(openPrice, closePrice)
+    maxPrice = Math.max(openPrice, closePrice)
+    
+    if (minPrice === maxPrice) {
+      const variation = maxPrice * 0.01
+      minPrice = maxPrice - variation
+      maxPrice = maxPrice + variation
+    }
+  } else {
+    minPrice = Math.min(...closePrices)
+    maxPrice = Math.max(...closePrices)
+  }
+  
   const priceRange = maxPrice - minPrice || 1
   
   return points.map((point, index) => {
-    const closePrice = parseFloat(point.close || point.Close || point.price || point.Price || point.value || point.Value || point.adjClose || point.AdjClose || 0) || 0
     const x = padding + (index / Math.max(points.length - 1, 1)) * (width - 2 * padding)
+    const closePrice = parseFloat(point.close || point.Close || point.price || point.Price || point.value || point.Value || point.adjClose || point.AdjClose || 0) || 0
     const y = height - padding - ((closePrice - minPrice) / priceRange) * (height - 2 * padding)
     
-    return {
-      x: isNaN(x) ? padding + (index * 10) : x,
-      y: isNaN(y) ? height / 2 : Math.max(padding, Math.min(height - padding, y))
-    }
+    const validX = isNaN(x) ? padding + (index * 10) : x
+    const validY = isNaN(y) ? height / 2 : Math.max(padding, Math.min(height - padding, y))
+    
+    return { x: validX, y: validY }
   })
 }
 
@@ -402,68 +375,37 @@ const getPercentageColor = (symbol) => {
   return 'text-muted-foreground'
 }
 
-// const addToWatchlist = async (symbol, displayName = null) => {
-//   if (!symbol.trim()) return
-  
-//   isLoading.value = true
-//   error.value = ''
-  
-//   try {
-//     const response = await fetch('/api/v1/watchlist/', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${authStore.token}`
-//       },
-//       body: JSON.stringify({
-//         symbol: symbol.trim().toUpperCase(),
-//         display_name: displayName
-//       })
-//     })
-    
-//     if (!response.ok) {
-//       const errorData = await response.json()
-//       throw new Error(errorData.detail || 'Failed to add symbol')
-//     }
-    
-//     await fetchCustomWatchlist()
-//   } catch (err) {
-//     console.error('Error adding to watchlist:', err)
-//     error.value = err.message
-//     throw err // Re-throw für SymbolSearch-Komponente
-//   } finally {
-//     isLoading.value = false
-//   }
-// }
+// Display Name für Aktien
+const getDisplayName = (item) => {
+  // Priorität: display_name > name > symbol
+  return item.display_name || item.name || item.symbol
+}
 
-const removeFromWatchlist = async (watchlistId) => {
+// Navigation zu Symbol
+const navigateToSymbol = (symbol) => {
+  router.push(`/symbol/${symbol}`)
+}
+
+// Entferne aus Watchlist
+const removeFromWatchlist = async (symbol) => {
+  if (!authStore.isAuthenticated) return
+  
   try {
-    const response = await fetch(`/api/v1/watchlist/${watchlistId}`, {
-      method: 'DELETE',
+    await axios.delete(`/api/v1/watchlist/${symbol}`, {
       headers: {
         'Authorization': `Bearer ${authStore.token}`
       }
     })
     
-    if (response.ok) {
-      await fetchCustomWatchlist()
-    }
+    // Entferne aus lokaler Liste
+    customWatchlist.value = customWatchlist.value.filter(item => item.symbol !== symbol)
+    
+    // Entferne Chart-Daten
+    delete watchlistChartData.value[symbol]
   } catch (err) {
     console.error('Error removing from watchlist:', err)
-    error.value = 'Fehler beim Entfernen des Symbols'
   }
 }
-
-const navigateToSymbol = (symbol) => {
-  router.push(`/symbol/${symbol}`)
-}
-
-onMounted(async () => {
-  // Lade Watchlist zuerst (schneller)
-  await fetchCustomWatchlist()
-  
-  // HotStocks lädt automatisch in der Komponente
-})
 </script>
 
 <style scoped>
@@ -481,12 +423,4 @@ onMounted(async () => {
     transform: translateY(0);
   }
 }
-
-/* Staggered animation für Cards */
-.fade-in:nth-child(1) { animation-delay: 0.1s; }
-.fade-in:nth-child(2) { animation-delay: 0.2s; }
-.fade-in:nth-child(3) { animation-delay: 0.3s; }
-.fade-in:nth-child(4) { animation-delay: 0.4s; }
-.fade-in:nth-child(5) { animation-delay: 0.5s; }
-.fade-in:nth-child(6) { animation-delay: 0.6s; }
 </style>

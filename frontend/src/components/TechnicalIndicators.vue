@@ -1,7 +1,7 @@
 <!--<template>-->
 <!--  <Card>-->
 <!--    <CardHeader>-->
-<!--      <CardTitle>Technical Indicators</CardTitle>-->
+<!--      <CardTitle>{{ t('symbolAnalysis.technicalIndicators') }}</CardTitle>-->
 <!--    </CardHeader>-->
 <!--    <CardContent>-->
 <!--      <div class="space-y-6">-->
@@ -156,7 +156,7 @@
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Technical Indicators</CardTitle>
+      <CardTitle>{{ t('symbolAnalysis.technicalIndicators') }}</CardTitle>
     </CardHeader>
     <CardContent>
       <div class="space-y-6">
@@ -510,10 +510,12 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { AlertCircle, Info } from 'lucide-vue-next'
 import { useMarketStore } from '@/stores/market'
 
+const { t } = useI18n()
 const marketStore = useMarketStore()
 
 const props = defineProps({

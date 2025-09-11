@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex justify-between items-center">
-      <h3 class="text-xl font-semibold">Hot Stocks</h3>
+      <h3 class="text-xl font-semibold">{{ t('dashboard.hotStocks') }}</h3>
       <div class="flex items-center gap-2">
         <select 
           v-model="sortBy" 
@@ -116,10 +116,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import MiniChart from '@/components/MiniChart.vue'
 
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const emit = defineEmits(['watchlist-changed'])

@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
     <div class="flex justify-between items-center">
-      <h2 class="text-3xl font-bold">Einstellungen</h2>
+      <h2 class="text-3xl font-bold">{{ t('nav.settings') }}</h2>
       <div class="flex items-center space-x-2">
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         <span class="text-sm text-muted-foreground">Live</span>
@@ -177,12 +177,14 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 // Reactive data

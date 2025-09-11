@@ -4,7 +4,7 @@
       <div>
         <h2 class="text-3xl font-bold">{{ symbol }}</h2>
         <p class="text-muted-foreground">
-          Current Price: {{ marketStore.currencySymbol }}{{ formatNumber(currentPrice) }}
+          {{ t('symbolAnalysis.currentPrice') }}: {{ marketStore.currencySymbol }}{{ formatNumber(currentPrice) }}
           <Badge :variant="priceChange >= 0 ? 'default' : 'destructive'" class="ml-2">
             {{ priceChange >= 0 ? '+' : '' }}{{ formatNumber(priceChange) }}%
           </Badge>
@@ -70,6 +70,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useMarketStore } from '@/stores/market'
 import { useAuthStore } from '@/stores/auth'
 import { Loader2 } from 'lucide-vue-next'
@@ -84,6 +85,7 @@ import AIAnalysis from '@/components/AIAnalysis.vue'
 import ConnectionStatus from '@/components/ConnectionStatus.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 const marketStore = useMarketStore()
 const authStore = useAuthStore()
 const timeframe = ref('1Y')
@@ -222,7 +224,9 @@ const toggleWatchlist = async () => {
 
 onMounted(() => {
   fetchData()
-  marketStore.initializeWebSocket(symbol.value)
+  if (import.meta.env.VITE_ENABLE_WS === 'true') {
+    marketStore.initializeWebSocket(symbol.value)
+  }
   checkWatchlistStatus()
 })
 

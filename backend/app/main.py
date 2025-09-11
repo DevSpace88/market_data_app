@@ -101,12 +101,19 @@
 
 
 # main.py
+import logging
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from .api.routes import router as api_router
 from .config import get_settings
 from .models.database import init_db
 from .auth import get_current_admin_user
+
+# Reduziere Debug-Logs für saubere Ausgabe
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("openai").setLevel(logging.WARNING)
+logging.getLogger("multipart").setLevel(logging.WARNING)
 
 settings = get_settings()
 
@@ -143,6 +150,10 @@ app.include_router(ai_settings_router, prefix="/api/v1/ai-settings", tags=["ai-s
 # Include market analysis routes
 from .api.routes.market_analysis import router as market_analysis_router
 app.include_router(market_analysis_router, prefix="/api/v1/market", tags=["market-analysis"])
+
+# Include WebSocket routes
+from .api.routes.websocket import router as websocket_router
+app.include_router(websocket_router, prefix="/api/v1/ws", tags=["websocket"])
 
 # Startup Event
 @app.on_event("startup")

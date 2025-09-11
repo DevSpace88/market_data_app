@@ -421,6 +421,8 @@
 // stores/market.js
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import cacheService from '@/services/cacheService'
+import { useAuthStore } from '@/stores/auth'
 
 export const useMarketStore = defineStore('market', {
   state: () => ({
@@ -443,6 +445,7 @@ export const useMarketStore = defineStore('market', {
     wsConnected: false,
     lastPongTime: null,
     pingInterval: null,
+    wsRetryAttempts: 0,
     currency: 'USD',
     currencySymbol: '$'
   }),
@@ -465,8 +468,39 @@ export const useMarketStore = defineStore('market', {
   },
 
   actions: {
+    isTokenValid() {
+      const token = localStorage.getItem('token')
+      if (!token) return false
+      try {
+        const parts = token.split('.')
+        if (parts.length !== 3) return false
+        // base64url -> base64
+        let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+        const pad = b64.length % 4
+        if (pad) b64 += '='.repeat(4 - pad)
+        const json = atob(b64)
+        const payload = JSON.parse(json)
+        const expMs = (payload?.exp ?? 0) * 1000
+        // Als zusätzliches Safety-Net: min. 60s Restlaufzeit
+        return expMs - Date.now() > 60000
+      } catch {
+        return false
+      }
+    },
+
     async fetchMarketData(symbol, timeframe) {
       if (!symbol) return;
+      
+      // Prüfe Cache zuerst
+      const cachedData = cacheService.getMarketData(symbol, timeframe);
+      if (cachedData) {
+        console.log(`📊 Using cached market data for ${symbol} (${timeframe})`);
+        this.marketData = cachedData.data || [];
+        this.currency = cachedData.currency || 'USD';
+        this.currencySymbol = cachedData.currencySymbol || '$';
+        return;
+      }
+
       this.loading = true;
       this.error = null;
 
@@ -490,6 +524,9 @@ export const useMarketStore = defineStore('market', {
           this.marketData = response.data.data || [];
           this.currency = response.data.currency || 'USD';
           this.currencySymbol = response.data.currencySymbol || '$';
+          
+          // Cache die Daten
+          cacheService.setMarketData(symbol, timeframe, response.data);
         }
       } catch (error) {
         console.error('Error fetching market data:', error);
@@ -500,6 +537,21 @@ export const useMarketStore = defineStore('market', {
     },
     async fetchMarketAnalysis(symbol, timeframe) {
       if (!symbol) return;
+      
+      // Prüfe Cache zuerst
+      const cachedData = cacheService.getAnalysis(symbol);
+      if (cachedData) {
+        console.log(`🤖 Using cached AI analysis for ${symbol} - saving API costs!`);
+        this.technicalIndicators = cachedData.technical_indicators || {};
+        this.patterns = cachedData.patterns || [];
+        this.signals = cachedData.signals || [];
+        this.riskMetrics = cachedData.risk_metrics || null;
+        this.aiAnalysis = cachedData.ai_analysis || null;
+        this.selectedSymbol = symbol;
+        this.timeframe = timeframe || this.timeframe;
+        return;
+      }
+
       this.loading = true;
       this.error = null;
 
@@ -520,6 +572,9 @@ export const useMarketStore = defineStore('market', {
           this.aiAnalysis = response.data.ai_analysis || null;
           this.selectedSymbol = symbol;
           this.timeframe = timeframe || this.timeframe;
+          
+          // Cache die Daten
+          cacheService.setAnalysis(symbol, response.data);
 
           // Debugging: Überprüfe die Antwort von der API
 
@@ -555,6 +610,10 @@ export const useMarketStore = defineStore('market', {
     },
 
     initializeWebSocket(symbol) {
+      // Feature-Flag: WebSocket nur aktivieren, wenn explizit erlaubt
+      if (import.meta.env.VITE_ENABLE_WS !== 'true') {
+        return
+      }
       if (!symbol) return
       
       // Only initialize WebSocket if we're in SymbolAnalysis view
@@ -562,17 +621,26 @@ export const useMarketStore = defineStore('market', {
         return
       }
       
+      // Blockiere WS-Verbindung bei abgelaufenem/ungültigem Token
+      if (!this.isTokenValid()) {
+        return
+      }
+      
       this.cleanupWebSocket()
+      this.wsRetryAttempts = 0
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const host = window.location.host
-      const wsUrl = `${protocol}//${host}/api/v1/ws/market/${symbol}`
+      const token = localStorage.getItem('token')
+      // Verbinde direkt mit dem Backend-Port, um Proxy-Issues zu vermeiden
+      const backendHost = `${window.location.hostname}:8000`
+      const wsUrl = `${protocol}//${backendHost}/api/v1/ws/market/${symbol}?token=${encodeURIComponent(token)}`
 
       try {
         this.websocket = new WebSocket(wsUrl)
 
         this.websocket.onopen = () => {
           this.wsConnected = true
+          this.wsRetryAttempts = 0
           this.startPingInterval()
         }
 
@@ -596,8 +664,8 @@ export const useMarketStore = defineStore('market', {
           }
         }
 
-        this.websocket.onerror = (error) => {
-          console.error('WebSocket error:', error)
+        this.websocket.onerror = () => {
+          // Fehler still behandeln
           this.wsConnected = false
         }
 
@@ -605,16 +673,22 @@ export const useMarketStore = defineStore('market', {
           this.wsConnected = false
           this.cleanupWebSocket()
 
-          // Only auto-reconnect if still in SymbolAnalysis view
+          // Nach 3 Fehlversuchen stoppen, um Browser-Fehler zu vermeiden
+          if (this.wsRetryAttempts >= 3) {
+            return
+          }
+          // Exponentielles Backoff (max 30s)
+          const delay = Math.min(30000, 3000 * Math.max(1, this.wsRetryAttempts + 1))
+          this.wsRetryAttempts = Math.min(this.wsRetryAttempts + 1, 10)
           setTimeout(() => {
-            if (this.selectedSymbol && window.location.pathname.includes('/symbol/')) {
+            if (this.selectedSymbol && window.location.pathname.includes('/symbol/') && this.isTokenValid()) {
               this.initializeWebSocket(this.selectedSymbol)
             }
-          }, 5000)
+          }, delay)
         }
 
       } catch (error) {
-        console.error('WebSocket initialization error:', error)
+        // still behandeln
         this.wsConnected = false
       }
     },
@@ -739,6 +813,16 @@ export const useMarketStore = defineStore('market', {
         this.error = error.response?.data?.detail || 'Failed to fetch risk metrics'
       } finally {
         this.loadingRiskMetrics = false
+      }
+    },
+
+    // Cache status für Debugging
+    getCacheStatus() {
+      return {
+        marketData: cacheService.has(`market_data_${this.selectedSymbol}_${this.timeframe}`),
+        analysis: cacheService.has(`analysis_${this.selectedSymbol}`),
+        watchlist: cacheService.has('watchlist'),
+        hotStocks: cacheService.has('hot_stocks')
       }
     }
   }
