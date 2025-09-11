@@ -88,16 +88,16 @@
               </td>
               <td class="px-4 py-3">
                 <div class="w-16 h-8">
-                  <MiniChart :data="stock.chartData" :isPositive="stock.change_percent >= 0" />
+                  <MiniChart :data="stock.chart_data" :isPositive="stock.change_percent >= 0" />
                 </div>
               </td>
               <td class="px-4 py-3">
                 <button
                   @click.stop="toggleWatchlist(stock)"
                   class="p-1 hover:bg-accent rounded-md transition-colors"
-                  :class="stock.inWatchlist ? 'text-destructive' : 'text-muted-foreground'"
+                  :class="stock.in_watchlist ? 'text-destructive' : 'text-muted-foreground'"
                 >
-                  <svg v-if="stock.inWatchlist" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="stock.in_watchlist" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                   </svg>
                   <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,28 +129,8 @@ const sortBy = ref('change_percent')
 const sortOrder = ref('desc')
 const isLoading = ref(false)
 
-// Mock data für Hot Stocks (in einer echten App würde das von einer API kommen)
+// Fallback data if API fails
 const mockStocks = [
-  {
-    symbol: 'NVDA',
-    name: 'NVIDIA Corporation',
-    price: 875.50,
-    change: 45.20,
-    change_percent: 5.45,
-    volume: 45234567,
-    chartData: [820, 835, 845, 860, 875, 870, 875],
-    inWatchlist: false
-  },
-  {
-    symbol: 'TSLA',
-    name: 'Tesla Inc.',
-    price: 245.80,
-    change: -12.30,
-    change_percent: -4.76,
-    volume: 67890123,
-    chartData: [258, 252, 248, 245, 242, 247, 245],
-    inWatchlist: false
-  },
   {
     symbol: 'AAPL',
     name: 'Apple Inc.',
@@ -158,58 +138,8 @@ const mockStocks = [
     change: 8.75,
     change_percent: 4.69,
     volume: 34567890,
-    chartData: [186, 189, 192, 195, 198, 196, 195],
-    inWatchlist: false
-  },
-  {
-    symbol: 'AMZN',
-    name: 'Amazon.com Inc.',
-    price: 158.90,
-    change: -3.20,
-    change_percent: -1.97,
-    volume: 23456789,
-    chartData: [162, 160, 159, 158, 157, 159, 158],
-    inWatchlist: false
-  },
-  {
-    symbol: 'GOOGL',
-    name: 'Alphabet Inc.',
-    price: 142.15,
-    change: 6.80,
-    change_percent: 5.02,
-    volume: 12345678,
-    chartData: [135, 138, 140, 142, 145, 143, 142],
-    inWatchlist: false
-  },
-  {
-    symbol: 'MSFT',
-    name: 'Microsoft Corporation',
-    price: 425.60,
-    change: 12.40,
-    change_percent: 3.00,
-    volume: 18765432,
-    chartData: [413, 418, 422, 425, 428, 426, 425],
-    inWatchlist: false
-  },
-  {
-    symbol: 'META',
-    name: 'Meta Platforms Inc.',
-    price: 485.30,
-    change: -8.90,
-    change_percent: -1.80,
-    volume: 15678901,
-    chartData: [494, 490, 487, 485, 482, 484, 485],
-    inWatchlist: false
-  },
-  {
-    symbol: 'NFLX',
-    name: 'Netflix Inc.',
-    price: 625.40,
-    change: 25.60,
-    change_percent: 4.27,
-    volume: 9876543,
-    chartData: [600, 610, 615, 620, 625, 623, 625],
-    inWatchlist: false
+    chart_data: [186, 189, 192, 195, 198, 196, 195],
+    in_watchlist: false
   }
 ]
 
@@ -249,7 +179,8 @@ const toggleSortOrder = () => {
 }
 
 const sortStocks = () => {
-  // Sorting wird automatisch durch computed property gehandhabt
+  // Reload data with new sort order
+  fetchHotStocks()
 }
 
 const navigateToSymbol = (symbol) => {
@@ -257,10 +188,17 @@ const navigateToSymbol = (symbol) => {
 }
 
 const toggleWatchlist = async (stock) => {
+  // Only allow watchlist toggle if user is authenticated
+  if (!authStore.isAuthenticated) {
+    // Redirect to login or show message
+    router.push('/login')
+    return
+  }
+  
   try {
-    if (stock.inWatchlist) {
+    if (stock.in_watchlist) {
       // Remove from watchlist
-      const response = await fetch(`/api/v1/watchlist/${stock.watchlistId}`, {
+      const response = await fetch(`/api/v1/watchlist/${stock.watchlist_id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${authStore.token}`
@@ -268,8 +206,8 @@ const toggleWatchlist = async (stock) => {
       })
       
       if (response.ok) {
-        stock.inWatchlist = false
-        stock.watchlistId = null
+        stock.in_watchlist = false
+        stock.watchlist_id = null
         // Emit event to parent to refresh watchlist
         emit('watchlist-changed')
       }
@@ -289,8 +227,8 @@ const toggleWatchlist = async (stock) => {
       
       if (response.ok) {
         const newItem = await response.json()
-        stock.inWatchlist = true
-        stock.watchlistId = newItem.id
+        stock.in_watchlist = true
+        stock.watchlist_id = newItem.id
         // Emit event to parent to refresh watchlist
         emit('watchlist-changed')
       }
@@ -301,6 +239,11 @@ const toggleWatchlist = async (stock) => {
 }
 
 const checkWatchlistStatus = async () => {
+  // Only check watchlist status if user is authenticated
+  if (!authStore.isAuthenticated) {
+    return
+  }
+  
   try {
     const response = await fetch('/api/v1/watchlist/', {
       headers: {
@@ -314,11 +257,11 @@ const checkWatchlistStatus = async () => {
       stocks.value.forEach(stock => {
         const watchlistItem = watchlist.find(item => item.symbol === stock.symbol)
         if (watchlistItem) {
-          stock.inWatchlist = true
-          stock.watchlistId = watchlistItem.id
+          stock.in_watchlist = true
+          stock.watchlist_id = watchlistItem.id
         } else {
-          stock.inWatchlist = false
-          stock.watchlistId = null
+          stock.in_watchlist = false
+          stock.watchlist_id = null
         }
       })
     }
@@ -327,19 +270,33 @@ const checkWatchlistStatus = async () => {
   }
 }
 
+const fetchHotStocks = async () => {
+  try {
+    const response = await fetch(`/api/v1/hot-stocks/?limit=20&sort_by=${sortBy.value}`)
+    
+    if (response.ok) {
+      const data = await response.json()
+      stocks.value = data
+      await checkWatchlistStatus()
+    } else {
+      console.error('Failed to fetch hot stocks')
+      // Fallback to mock data
+      stocks.value = [...mockStocks]
+    }
+  } catch (err) {
+    console.error('Error fetching hot stocks:', err)
+    // Fallback to mock data
+    stocks.value = [...mockStocks]
+  }
+}
+
 const refreshData = async () => {
   isLoading.value = true
-  // Simuliere API-Aufruf
-  setTimeout(() => {
-    // In einer echten App würde hier die API aufgerufen werden
-    stocks.value = [...mockStocks]
-    checkWatchlistStatus()
-    isLoading.value = false
-  }, 1000)
+  await fetchHotStocks()
+  isLoading.value = false
 }
 
 onMounted(() => {
-  stocks.value = [...mockStocks]
-  checkWatchlistStatus()
+  fetchHotStocks()
 })
 </script>

@@ -132,6 +132,10 @@ app.include_router(api_router, prefix=settings.API_PREFIX)
 from .api.routes.watchlist import router as watchlist_router
 app.include_router(watchlist_router, prefix="/api/v1/watchlist", tags=["watchlist"])
 
+# Include hot stocks routes
+from .api.routes.hot_stocks import router as hot_stocks_router
+app.include_router(hot_stocks_router, prefix="/api/v1/hot-stocks", tags=["hot-stocks"])
+
 # Startup Event
 @app.on_event("startup")
 async def startup_event():

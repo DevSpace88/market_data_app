@@ -2,9 +2,9 @@
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <h2 class="text-3xl font-bold">Market Dashboard</h2>
-      <div class="flex items-center gap-3">
+      <!-- <div class="flex items-center gap-3">
         <SymbolSearch :on-add="addToWatchlist" />
-      </div>
+      </div> -->
     </div>
 
     <!-- Watchlist Grid -->
@@ -75,7 +75,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import SymbolSearch from '@/components/SymbolSearch.vue'
+// import SymbolSearch from '@/components/SymbolSearch.vue'
 import HotStocks from '@/components/HotStocks.vue'
 
 const router = useRouter()
@@ -106,39 +106,39 @@ const fetchCustomWatchlist = async () => {
   }
 }
 
-const addToWatchlist = async (symbol, displayName = null) => {
-  if (!symbol.trim()) return
+// const addToWatchlist = async (symbol, displayName = null) => {
+//   if (!symbol.trim()) return
   
-  isLoading.value = true
-  error.value = ''
+//   isLoading.value = true
+//   error.value = ''
   
-  try {
-    const response = await fetch('/api/v1/watchlist/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.token}`
-      },
-      body: JSON.stringify({
-        symbol: symbol.trim().toUpperCase(),
-        display_name: displayName
-      })
-    })
+//   try {
+//     const response = await fetch('/api/v1/watchlist/', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${authStore.token}`
+//       },
+//       body: JSON.stringify({
+//         symbol: symbol.trim().toUpperCase(),
+//         display_name: displayName
+//       })
+//     })
     
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.detail || 'Failed to add symbol')
-    }
+//     if (!response.ok) {
+//       const errorData = await response.json()
+//       throw new Error(errorData.detail || 'Failed to add symbol')
+//     }
     
-    await fetchCustomWatchlist()
-  } catch (err) {
-    console.error('Error adding to watchlist:', err)
-    error.value = err.message
-    throw err // Re-throw für SymbolSearch-Komponente
-  } finally {
-    isLoading.value = false
-  }
-}
+//     await fetchCustomWatchlist()
+//   } catch (err) {
+//     console.error('Error adding to watchlist:', err)
+//     error.value = err.message
+//     throw err // Re-throw für SymbolSearch-Komponente
+//   } finally {
+//     isLoading.value = false
+//   }
+// }
 
 const removeFromWatchlist = async (watchlistId) => {
   try {
