@@ -116,3 +116,9 @@ Access the interactive API documentation at `http://localhost:8000/docs`
 ## WebSockets
 - Endpoint: `ws://localhost:8000/api/v1/ws/market/{symbol}?token=JWT`
 - Im Dev standardmäßig per Flag deaktivierbar: `VITE_ENABLE_WS=false`
+
+```
+## Login
+- User: admin
+- PW: admin123
+```
