@@ -84,10 +84,26 @@ from ..config import get_settings
 
 settings = get_settings()
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}  # Needed for SQLite
-)
+# Database engine configuration
+def create_database_engine():
+    """Create database engine with appropriate configuration for SQLite or PostgreSQL"""
+    database_url = settings.database_url
+    
+    if database_url.startswith("postgresql://"):
+        # PostgreSQL configuration
+        return create_engine(
+            database_url,
+            pool_pre_ping=True,  # Verify connections before use
+            pool_recycle=300,    # Recycle connections every 5 minutes
+        )
+    else:
+        # SQLite configuration
+        return create_engine(
+            database_url,
+            connect_args={"check_same_thread": False}
+        )
+
+engine = create_database_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

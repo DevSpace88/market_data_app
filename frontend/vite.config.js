@@ -36,5 +36,15 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: process.env.PORT || 3000
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    minify: 'terser'
   }
 })

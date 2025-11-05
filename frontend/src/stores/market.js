@@ -629,11 +629,18 @@ export const useMarketStore = defineStore('market', {
       this.cleanupWebSocket()
       this.wsRetryAttempts = 0
 
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const token = localStorage.getItem('token')
-      // Verbinde direkt mit dem Backend-Port, um Proxy-Issues zu vermeiden
-      const backendHost = `${window.location.hostname}:8000`
-      const wsUrl = `${protocol}//${backendHost}/api/v1/ws/market/${symbol}?token=${encodeURIComponent(token)}`
+      
+      // WebSocket URL aus Environment-Variablen oder Fallback
+      let wsUrl
+      if (import.meta.env.VITE_WS_BASE_URL) {
+        wsUrl = `${import.meta.env.VITE_WS_BASE_URL}/market/${symbol}?token=${encodeURIComponent(token)}`
+      } else {
+        // Fallback für lokale Entwicklung
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+        const backendHost = `${window.location.hostname}:8000`
+        wsUrl = `${protocol}//${backendHost}/api/v1/ws/market/${symbol}?token=${encodeURIComponent(token)}`
+      }
 
       try {
         this.websocket = new WebSocket(wsUrl)

@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/components/ui/toast/use-toast'
 
 const router = useRouter()
@@ -83,6 +84,11 @@ async function handleLogin() {
             {{ loading ? 'Loading...' : 'Login' }}
           </Button>
         </form>
+        <Alert class="mt-4">
+          <AlertDescription>
+            <strong>Testdaten:</strong> Benutzername: <code>admin</code>, Passwort: <code>admin123</code>
+          </AlertDescription>
+        </Alert>
       </CardContent>
     </Card>
   </div>

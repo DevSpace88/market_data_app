@@ -181,7 +181,7 @@ const router = createRouter({
       beforeEnter: async (to, from, next) => {
         try {
           const token = localStorage.getItem('token')
-          const response = await axios.get(`http://localhost:8000/api/v1/market/data/${to.params.symbol}`, {
+          const response = await axios.get(`/api/v1/market/data/${to.params.symbol}`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }

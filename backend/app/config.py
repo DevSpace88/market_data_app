@@ -15,6 +15,9 @@ load_dotenv(BASE_DIR / '.env')
 class Settings(BaseSettings):
     # Database Configuration
     DATABASE_URL: str = "sqlite:///./market_analysis.db"
+    
+    # Railway PostgreSQL Configuration
+    RAILWAY_DATABASE_URL: str | None = None
 
     # API Keys
     OPENAI_API_KEY: str = "sk-dummy-key"  # Standardwert hinzugefügt
@@ -49,6 +52,11 @@ class Settings(BaseSettings):
     def auth_secret_key(self) -> str:
         """Use JWT_SECRET_KEY if set, otherwise fall back to SECRET_KEY"""
         return self.JWT_SECRET_KEY or self.SECRET_KEY
+    
+    @property
+    def database_url(self) -> str:
+        """Use Railway PostgreSQL if available, otherwise fall back to SQLite"""
+        return self.RAILWAY_DATABASE_URL or self.DATABASE_URL
 
     class Config:
         env_file = ".env"

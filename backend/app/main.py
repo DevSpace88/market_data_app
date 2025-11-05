@@ -104,6 +104,7 @@
 import logging
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .api.routes import router as api_router
 from .config import get_settings
 from .models.database import init_db
@@ -154,6 +155,24 @@ app.include_router(market_analysis_router, prefix="/api/v1/market", tags=["marke
 # Include WebSocket routes
 from .api.routes.websocket import router as websocket_router
 app.include_router(websocket_router, prefix="/api/v1/ws", tags=["websocket"])
+
+# Health check endpoint
+@app.get("/api/v1/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": settings.VERSION,
+        "database": "connected"
+    }
+
+# Serve static files from frontend build (for monorepo deployment)
+import os
+from pathlib import Path
+
+# Check if frontend dist directory exists
+frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
 
 # Startup Event
 @app.on_event("startup")
