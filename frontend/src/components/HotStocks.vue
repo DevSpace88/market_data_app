@@ -197,22 +197,34 @@ const toggleWatchlist = async (stock) => {
     router.push('/login')
     return
   }
-  
+
   try {
+    // Get token from store or localStorage as fallback
+    const token = authStore.token || localStorage.getItem('auth_token')
+
+    if (!token) {
+      console.error('No auth token found')
+      router.push('/login')
+      return
+    }
+
     if (stock.in_watchlist) {
       // Remove from watchlist
-      const response = await fetch(`/api/v1/watchlist/${stock.watchlist_id}/`, {
+      const response = await fetch(`/api/v1/watchlist/${stock.watchlist_id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${authStore.token}`
+          'Authorization': `Bearer ${token}`
         }
       })
-      
+
       if (response.ok) {
         stock.in_watchlist = false
         stock.watchlist_id = null
         // Emit event to parent to refresh watchlist
         emit('watchlist-changed')
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to remove from watchlist:', errorData.detail || 'Unknown error')
       }
     } else {
       // Add to watchlist
@@ -220,20 +232,23 @@ const toggleWatchlist = async (stock) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authStore.token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           symbol: stock.symbol,
           display_name: stock.name
         })
       })
-      
+
       if (response.ok) {
         const newItem = await response.json()
         stock.in_watchlist = true
         stock.watchlist_id = newItem.id
         // Emit event to parent to refresh watchlist
         emit('watchlist-changed')
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to add to watchlist:', errorData.detail || 'Unknown error')
       }
     }
   } catch (err) {
@@ -246,14 +261,22 @@ const checkWatchlistStatus = async () => {
   if (!authStore.isAuthenticated) {
     return
   }
-  
+
   try {
+    // Get token from store or localStorage as fallback
+    const token = authStore.token || localStorage.getItem('auth_token')
+
+    if (!token) {
+      console.warn('No auth token found for watchlist status check')
+      return
+    }
+
     const response = await fetch('/api/v1/watchlist/', {
       headers: {
-        'Authorization': `Bearer ${authStore.token}`
+        'Authorization': `Bearer ${token}`
       }
     })
-    
+
     if (response.ok) {
       const watchlist = await response.json()
       // Update watchlist status for each stock

@@ -156,12 +156,20 @@ const formatNumber = (num) => {
 // Watchlist functions
 const checkWatchlistStatus = async () => {
   try {
+    // Get token from store or localStorage as fallback
+    const token = authStore.token || localStorage.getItem('auth_token')
+
+    if (!token) {
+      console.warn('No auth token found for watchlist status check')
+      return
+    }
+
     const response = await fetch('/api/v1/watchlist/', {
       headers: {
-        'Authorization': `Bearer ${authStore.token}`
+        'Authorization': `Bearer ${token}`
       }
     })
-    
+
     if (response.ok) {
       const watchlist = await response.json()
       const item = watchlist.find(item => item.symbol === symbol.value)
@@ -180,20 +188,31 @@ const checkWatchlistStatus = async () => {
 
 const toggleWatchlist = async () => {
   isWatchlistLoading.value = true
-  
+
   try {
+    // Get token from store or localStorage as fallback
+    const token = authStore.token || localStorage.getItem('auth_token')
+
+    if (!token) {
+      console.error('No auth token found')
+      return
+    }
+
     if (isInWatchlist.value) {
       // Remove from watchlist
-      const response = await fetch(`/api/v1/watchlist/${watchlistItemId.value}/`, {
+      const response = await fetch(`/api/v1/watchlist/${watchlistItemId.value}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${authStore.token}`
+          'Authorization': `Bearer ${token}`
         }
       })
-      
+
       if (response.ok) {
         isInWatchlist.value = false
         watchlistItemId.value = null
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to remove from watchlist:', errorData.detail || 'Unknown error')
       }
     } else {
       // Add to watchlist
@@ -201,18 +220,21 @@ const toggleWatchlist = async () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authStore.token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           symbol: symbol.value,
           display_name: symbol.value
         })
       })
-      
+
       if (response.ok) {
         const newItem = await response.json()
         isInWatchlist.value = true
         watchlistItemId.value = newItem.id
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to add to watchlist:', errorData.detail || 'Unknown error')
       }
     }
   } catch (err) {

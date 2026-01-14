@@ -104,16 +104,25 @@ export default {
 
     const fetchWatchlist = async () => {
       try {
+        // Get token from store or localStorage as fallback
+        const token = authStore.token || localStorage.getItem('auth_token')
+
+        if (!token) {
+          error.value = 'Nicht angemeldet. Bitte melden Sie sich an.'
+          router.push('/login')
+          return
+        }
+
         const response = await fetch('/api/v1/watchlist/with-data/', {
           headers: {
-            'Authorization': `Bearer ${authStore.token}`
+            'Authorization': `Bearer ${token}`
           }
         })
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch watchlist')
         }
-        
+
         watchlist.value = await response.json()
       } catch (err) {
         console.error('Error fetching watchlist:', err)
@@ -123,27 +132,36 @@ export default {
 
     const addToWatchlist = async () => {
       if (!newSymbol.value.trim()) return
-      
+
       isLoading.value = true
       error.value = ''
-      
+
       try {
+        // Get token from store or localStorage as fallback
+        const token = authStore.token || localStorage.getItem('auth_token')
+
+        if (!token) {
+          error.value = 'Nicht angemeldet. Bitte melden Sie sich an.'
+          router.push('/login')
+          return
+        }
+
         const response = await fetch('/api/v1/watchlist/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authStore.token}`
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             symbol: newSymbol.value.trim().toUpperCase()
           })
         })
-        
+
         if (!response.ok) {
           const errorData = await response.json()
           throw new Error(errorData.detail || 'Failed to add symbol')
         }
-        
+
         newSymbol.value = ''
         await fetchWatchlist()
       } catch (err) {
@@ -156,21 +174,31 @@ export default {
 
     const removeFromWatchlist = async (watchlistId) => {
       try {
-        const response = await fetch(`/api/v1/watchlist/${watchlistId}/`, {
+        // Get token from store or localStorage as fallback
+        const token = authStore.token || localStorage.getItem('auth_token')
+
+        if (!token) {
+          error.value = 'Nicht angemeldet. Bitte melden Sie sich an.'
+          router.push('/login')
+          return
+        }
+
+        const response = await fetch(`/api/v1/watchlist/${watchlistId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${authStore.token}`
+            'Authorization': `Bearer ${token}`
           }
         })
-        
+
         if (!response.ok) {
-          throw new Error('Failed to remove symbol')
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.detail || 'Failed to remove symbol')
         }
-        
+
         await fetchWatchlist()
       } catch (err) {
         console.error('Error removing from watchlist:', err)
-        error.value = 'Fehler beim Entfernen des Symbols'
+        error.value = err.message || 'Fehler beim Entfernen des Symbols'
       }
     }
 

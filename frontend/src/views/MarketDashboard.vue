@@ -389,17 +389,25 @@ const navigateToSymbol = (symbol) => {
 // Entferne aus Watchlist
 const removeFromWatchlist = async (symbol) => {
   if (!authStore.isAuthenticated) return
-  
+
   try {
-    await axios.delete(`/api/v1/watchlist/symbol/${symbol}/`, {
+    // Get token from store or localStorage as fallback
+    const token = authStore.token || localStorage.getItem('auth_token')
+
+    if (!token) {
+      console.error('No auth token found')
+      return
+    }
+
+    await axios.delete(`/api/v1/watchlist/symbol/${encodeURIComponent(symbol)}`, {
       headers: {
-        'Authorization': `Bearer ${authStore.token}`
+        'Authorization': `Bearer ${token}`
       }
     })
-    
+
     // Entferne aus lokaler Liste
     customWatchlist.value = customWatchlist.value.filter(item => item.symbol !== symbol)
-    
+
     // Entferne Chart-Daten
     delete watchlistChartData.value[symbol]
   } catch (err) {
