@@ -74,13 +74,21 @@
 
           <!-- API Key -->
           <div>
-            <Label for="api-key">API-Schlüssel</Label>
+            <div class="flex items-center gap-2 mb-1">
+              <Label for="api-key">API-Schlüssel</Label>
+              <div v-if="hasApiKey" class="flex items-center gap-1 text-green-600">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-xs font-medium">Gespeichert</span>
+              </div>
+            </div>
             <div class="flex space-x-2">
               <Input
                 id="api-key"
                 v-model="apiKey"
                 type="password"
-                placeholder="Ihr API-Schlüssel"
+                :placeholder="hasApiKey ? '••••••••••••••••' : 'Ihr API-Schlüssel'"
                 class="flex-1"
               />
               <Button @click="testConnection" :disabled="!apiKey || isTesting">
@@ -94,7 +102,7 @@
               </Button>
             </div>
             <p class="text-xs text-muted-foreground mt-1">
-              Ihr API-Schlüssel wird verschlüsselt gespeichert und sicher übertragen.
+              {{ hasApiKey ? 'Ein API-Schlüssel ist gespeichert. Geben Sie einen neuen ein, um ihn zu ersetzen.' : 'Ihr API-Schlüssel wird verschlüsselt gespeichert und sicher übertragen.' }}
             </p>
           </div>
 

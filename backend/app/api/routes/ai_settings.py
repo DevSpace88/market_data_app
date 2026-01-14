@@ -61,6 +61,13 @@ async def update_ai_settings(
         current_user.ai_temperature = str(settings.ai_temperature)
         current_user.ai_max_tokens = settings.ai_max_tokens
 
+        logger.info(f"[AI SETTINGS DEBUG] Received settings for user {current_user.username}")
+        logger.info(f"[AI SETTINGS DEBUG] ai_provider: {settings.ai_provider.value}")
+        logger.info(f"[AI SETTINGS DEBUG] ai_model: {settings.ai_model}")
+        logger.info(f"[AI SETTINGS DEBUG] ai_api_key provided: {bool(settings.ai_api_key)}")
+        if settings.ai_api_key:
+            logger.info(f"[AI SETTINGS DEBUG] ai_api_key length: {len(settings.ai_api_key)}")
+
         # Store API key with encryption if provided
         if settings.ai_api_key:
             APITokenService.store_api_key(db, current_user, settings.ai_api_key)

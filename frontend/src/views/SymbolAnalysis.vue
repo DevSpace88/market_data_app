@@ -143,8 +143,8 @@ const fetchData = async () => {
   // Reset watchlist status when switching symbols
   isInWatchlist.value = false
   watchlistItemId.value = null
-  await marketStore.fetchMarketData(symbol.value, timeframe.value)
-  await marketStore.fetchMarketAnalysis(symbol.value, timeframe.value)
+  await marketStore.loadMarketData(symbol.value, timeframe.value)
+  await marketStore.loadMarketAnalysis(symbol.value, timeframe.value)
   // Check watchlist status for new symbol
   await checkWatchlistStatus()
 }
@@ -225,7 +225,7 @@ const toggleWatchlist = async () => {
 onMounted(() => {
   fetchData()
   if (import.meta.env.VITE_ENABLE_WS === 'true') {
-    marketStore.initializeWebSocket(symbol.value)
+    marketStore.initWebSocket(symbol.value)
   }
   checkWatchlistStatus()
 })
