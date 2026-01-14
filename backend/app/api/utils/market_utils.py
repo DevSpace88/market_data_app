@@ -31,13 +31,18 @@ def _to_builtin(value: Any) -> Any:
     Recursively convert numpy/pandas scalars to native Python types.
 
     This is necessary for JSON serialization of API responses.
+    Handles NaN and Inf values by converting them to None.
     """
     if isinstance(value, (np.integer,)):
         return int(value)
     if isinstance(value, (np.floating,)):
-        return float(value)
+        f = float(value)
+        return None if not np.isfinite(f) else f
     if isinstance(value, (np.bool_,)):
         return bool(value)
+    # Handle regular Python floats that might be NaN or Inf
+    if isinstance(value, float):
+        return None if (value != value or abs(value) == float('inf')) else value
     if isinstance(value, (list, tuple)):
         return [_to_builtin(v) for v in value]
     if isinstance(value, dict):

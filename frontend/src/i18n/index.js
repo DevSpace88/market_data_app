@@ -26,6 +26,7 @@ const messages = {
     // Symbol Analysis
     symbolAnalysis: {
       title: 'Symbol Analysis',
+      timeframe: 'Timeframe',
       currentPrice: 'Current Price',
       priceChange: 'Price Change',
       marketCap: 'Market Cap',
@@ -199,6 +200,7 @@ const messages = {
     // Symbol Analysis
     symbolAnalysis: {
       title: 'Symbol Analyse',
+      timeframe: 'Zeitraum',
       currentPrice: 'Aktueller Preis',
       priceChange: 'Preisänderung',
       marketCap: 'Marktkapitalisierung',

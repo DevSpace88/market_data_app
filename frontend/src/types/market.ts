@@ -23,6 +23,15 @@ export interface MarketData {
 /** Technical Indicators */
 export interface TechnicalIndicators {
   current: IndicatorValues
+  historical?: HistoricalIndicatorValues
+}
+
+export interface HistoricalIndicatorValues {
+  sma_20?: Record<number, number>
+  sma_50?: Record<number, number>
+  bb_upper?: Record<number, number>
+  bb_lower?: Record<number, number>
+  bb_middle?: Record<number, number>
 }
 
 export interface IndicatorValues {

@@ -44,6 +44,9 @@
             :technical-data="technicalIndicators"
             :currency="marketStore.currency"
             :currency-symbol="marketStore.currencySymbol"
+            :symbol="symbol"
+            :timeframe="timeframe"
+            @timeframe-change="handleTimeframeChange"
         />
       </div>
       <TechnicalIndicators

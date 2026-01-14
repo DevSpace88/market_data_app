@@ -1,427 +1,307 @@
-<!--<template>-->
-<!--  <div class="bg-card rounded-lg shadow p-6">-->
-<!--    <div class="mb-4 flex gap-2">-->
-<!--      <Button-->
-<!--        v-for="indicator in indicators"-->
-<!--        :key="indicator.name"-->
-<!--        variant="outline"-->
-<!--        size="sm"-->
-<!--        :class="{ 'bg-primary/10': indicator.active }"-->
-<!--        @click="toggleIndicator(indicator)"-->
-<!--      >-->
-<!--        {{ indicator.name }}-->
-<!--      </Button>-->
-<!--    </div>-->
-<!--    <div id="chart-container" ref="chartRef" class="h-[700px]"></div>-->
-<!--  </div>-->
-<!--</template>-->
-
-<!--<script setup>-->
-<!--import { ref, onMounted, watch, onUnmounted } from 'vue'-->
-<!--import { createChart } from 'lightweight-charts'-->
-<!--import { Button } from '@/components/ui/button'-->
-
-<!--const props = defineProps({-->
-<!--  data: {-->
-<!--    type: Array,-->
-<!--    default: () => []-->
-<!--  },-->
-<!--  technicalData: {-->
-<!--    type: Object,-->
-<!--    default: () => ({})-->
-<!--  }-->
-<!--})-->
-
-<!--const chartRef = ref(null)-->
-<!--const chart = ref(null)-->
-<!--const candlestickSeries = ref(null)-->
-<!--const series = ref({})-->
-
-<!--const indicators = ref([-->
-<!--  { name: 'MA20', active: true, color: '#2196F3' },-->
-<!--  { name: 'MA50', active: true, color: '#FF9800' },-->
-<!--  { name: 'BB Upper', active: true, color: '#4CAF50' },-->
-<!--  { name: 'BB Lower', active: true, color: '#4CAF50' }-->
-<!--])-->
-
-<!--const initChart = () => {-->
-<!--  const chartOptions = {-->
-<!--    layout: {-->
-<!--      textColor: 'black',-->
-<!--      background: { type: 'solid', color: 'white' }-->
-<!--    },-->
-<!--    grid: {-->
-<!--      vertLines: { color: '#e6e6e6' },-->
-<!--      horzLines: { color: '#e6e6e6' }-->
-<!--    },-->
-<!--    crosshair: {-->
-<!--      mode: 1,-->
-<!--      vertLine: {-->
-<!--        color: '#2962FF',-->
-<!--        width: 0.5,-->
-<!--        style: 1,-->
-<!--        visible: true,-->
-<!--        labelVisible: true-->
-<!--      },-->
-<!--      horzLine: {-->
-<!--        color: '#2962FF',-->
-<!--        width: 0.5,-->
-<!--        style: 1,-->
-<!--        visible: true,-->
-<!--        labelVisible: true-->
-<!--      }-->
-<!--    }-->
-<!--  }-->
-
-<!--  chart.value = createChart(chartRef.value, chartOptions)-->
-
-<!--  // Candlestick Series-->
-<!--  candlestickSeries.value = chart.value.addCandlestickSeries({-->
-<!--    upColor: '#26a69a',-->
-<!--    downColor: '#ef5350',-->
-<!--    borderVisible: false,-->
-<!--    wickUpColor: '#26a69a',-->
-<!--    wickDownColor: '#ef5350'-->
-<!--  })-->
-
-<!--  // Initialize Technical Indicators-->
-<!--  series.value = {-->
-<!--    MA20: chart.value.addLineSeries({-->
-<!--      color: '#2196F3',-->
-<!--      lineWidth: 1,-->
-<!--      visible: true-->
-<!--    }),-->
-<!--    MA50: chart.value.addLineSeries({-->
-<!--      color: '#FF9800',-->
-<!--      lineWidth: 1,-->
-<!--      visible: true-->
-<!--    }),-->
-<!--    'BB Upper': chart.value.addLineSeries({-->
-<!--      color: '#4CAF50',-->
-<!--      lineWidth: 1,-->
-<!--      lineStyle: 1, // Dashed-->
-<!--      visible: true-->
-<!--    }),-->
-<!--    'BB Lower': chart.value.addLineSeries({-->
-<!--      color: '#4CAF50',-->
-<!--      lineWidth: 1,-->
-<!--      lineStyle: 1, // Dashed-->
-<!--      visible: true-->
-<!--    })-->
-<!--  }-->
-
-<!--  updateChartData()-->
-<!--}-->
-
-<!--const calculateMA = (data, period) => {-->
-<!--  return data.map((item, index) => {-->
-<!--    if (index < period - 1) return null-->
-<!--    const slice = data.slice(index - period + 1, index + 1)-->
-<!--    const sum = slice.reduce((acc, val) => acc + val.close, 0)-->
-<!--    return {-->
-<!--      time: new Date(item.timestamp).getTime() / 1000,-->
-<!--      value: sum / period-->
-<!--    }-->
-<!--  }).filter(item => item !== null)-->
-<!--}-->
-
-<!--const toggleIndicator = (indicator) => {-->
-<!--  indicator.active = !indicator.active-->
-<!--  if (series.value[indicator.name]) {-->
-<!--    series.value[indicator.name].applyOptions({-->
-<!--      visible: indicator.active-->
-<!--    })-->
-<!--  }-->
-<!--}-->
-
-<!--const updateChartData = () => {-->
-<!--  if (!chart.value || !props.data.length) return-->
-
-<!--  // Update Candlesticks-->
-<!--  const candleData = props.data.map(item => ({-->
-<!--    time: new Date(item.timestamp).getTime() / 1000,-->
-<!--    open: item.open,-->
-<!--    high: item.high,-->
-<!--    low: item.low,-->
-<!--    close: item.close-->
-<!--  }))-->
-<!--  candlestickSeries.value.setData(candleData)-->
-
-<!--  // Update MA20-->
-<!--  const ma20Data = calculateMA(props.data, 20)-->
-<!--  series.value['MA20'].setData(ma20Data)-->
-
-<!--  // Update MA50-->
-<!--  const ma50Data = calculateMA(props.data, 50)-->
-<!--  series.value['MA50'].setData(ma50Data)-->
-
-<!--  // Update Bollinger Bands-->
-<!--  const bbData = props.data.map(item => {-->
-<!--    const timestamp = new Date(item.timestamp).getTime() / 1000-->
-<!--    return {-->
-<!--      upper: {-->
-<!--        time: timestamp,-->
-<!--        value: props.technicalData?.historical?.[item.timestamp]?.bb_upper ||-->
-<!--               props.technicalData?.current?.bb_upper-->
-<!--      },-->
-<!--      lower: {-->
-<!--        time: timestamp,-->
-<!--        value: props.technicalData?.historical?.[item.timestamp]?.bb_lower ||-->
-<!--               props.technicalData?.current?.bb_lower-->
-<!--      }-->
-<!--    }-->
-<!--  })-->
-
-<!--  series.value['BB Upper'].setData(bbData.map(d => d.upper).filter(item => item.value !== undefined))-->
-<!--  series.value['BB Lower'].setData(bbData.map(d => d.lower).filter(item => item.value !== undefined))-->
-
-<!--  chart.value.timeScale().fitContent()-->
-<!--}-->
-
-<!--onMounted(() => {-->
-<!--  initChart()-->
-<!--})-->
-
-<!--watch(() => props.data, () => {-->
-<!--  updateChartData()-->
-<!--}, { deep: true })-->
-
-<!--watch(() => props.technicalData, () => {-->
-<!--  updateChartData()-->
-<!--}, { deep: true })-->
-
-<!--onUnmounted(() => {-->
-<!--  if (chart.value) {-->
-<!--    chart.value.remove()-->
-<!--  }-->
-<!--})-->
-<!--</script>-->
-
-
 <template>
-  <div class="bg-card rounded-lg shadow p-6">
-    <div class="mb-4 flex gap-2">
-      <Button
-        v-for="indicator in indicators"
-        :key="indicator.name"
-        variant="outline"
-        size="sm"
-        :class="{ 'bg-primary/10': indicator.active }"
-        @click="toggleIndicator(indicator)"
-      >
-        {{ indicator.name }}
-      </Button>
-    </div>
-    <div
-      id="chart-container"
-      ref="chartRef"
-      class="w-full sm:h-[500px] md:h-[700px] lg:h-[900px]"
-    ></div>
-  </div>
+  <Card class="pt-0">
+    <CardHeader class="flex items-center gap-2 space-y-0 border-b py-5">
+      <div class="grid flex-1 gap-1">
+        <CardTitle>{{ symbol || t('symbolAnalysis.title') }}</CardTitle>
+        <CardDescription v-if="timeframe">
+          {{ t('symbolAnalysis.timeframe') }}: {{ timeframe }}
+        </CardDescription>
+      </div>
+      <div class="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          :class="{ 'bg-primary/10': showMA20 }"
+          @click="showMA20 = !showMA20"
+        >
+          MA 20
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :class="{ 'bg-primary/10': showMA50 }"
+          @click="showMA50 = !showMA50"
+        >
+          MA 50
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :class="{ 'bg-primary/10': showBB }"
+          @click="showBB = !showBB"
+        >
+          BB
+        </Button>
+      </div>
+    </CardHeader>
+    <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-4">
+      <ChartContainer :config="chartConfig" class="aspect-auto h-[400px] w-full">
+        <VisXYContainer
+          :data="chartData"
+          :svg-defs="svgDefs"
+          :margin="{ left: -10, right: 10, top: 10, bottom: 20 }"
+        >
+          <!-- Area fill for price -->
+          <VisArea
+            :x="(d: DataPoint) => d.date"
+            :y="(d: DataPoint) => d.close"
+            color="url(#fillPrice)"
+          />
+
+          <!-- Main price line -->
+          <VisLine
+            :x="(d: DataPoint) => d.date"
+            :y="(d: DataPoint) => d.close"
+            :color="chartConfig.price.color"
+            :line-width="2"
+          />
+
+          <!-- MA 20 Line -->
+          <VisLine
+            v-if="showMA20"
+            :x="(d: DataPoint) => d.date"
+            :y="(d: DataPoint) => d.ma20"
+            :color="chartConfig.ma20.color"
+            :line-width="1.5"
+          />
+
+          <!-- MA 50 Line -->
+          <VisLine
+            v-if="showMA50"
+            :x="(d: DataPoint) => d.date"
+            :y="(d: DataPoint) => d.ma50"
+            :color="chartConfig.ma50.color"
+            :line-width="1.5"
+          />
+
+          <!-- Bollinger Bands -->
+          <VisLine
+            v-if="showBB"
+            :x="(d: DataPoint) => d.date"
+            :y="(d: DataPoint) => d.bb_upper"
+            :color="chartConfig.bb.color"
+            :line-width="1"
+            :line-style="2"
+          />
+          <VisLine
+            v-if="showBB"
+            :x="(d: DataPoint) => d.date"
+            :y="(d: DataPoint) => d.bb_lower"
+            :color="chartConfig.bb.color"
+            :line-width="1"
+            :line-style="2"
+          />
+
+          <!-- X Axis -->
+          <VisAxis
+            type="x"
+            :x="(d: DataPoint) => d.date"
+            :tick-line="false"
+            :domain-line="false"
+            :grid-line="false"
+            :num-ticks="6"
+            :tick-format="(d: number) => {
+              const date = new Date(d)
+              return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              })
+            }"
+          />
+
+          <!-- Y Axis -->
+          <VisAxis
+            type="y"
+            :num-ticks="4"
+            :tick-line="false"
+            :domain-line="false"
+            :tick-format="(d: number) => formatCurrency(d)"
+          />
+
+          <!-- Tooltip -->
+          <VisTooltip>
+            <template #default="{ data }">
+              <div
+                class="grid min-w-[8rem] items-start gap-1.5 rounded-lg border bg-popover px-2.5 py-1.5 text-xs shadow-xl"
+              >
+                <div class="text-muted-foreground font-medium">
+                  {{ new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-muted-foreground">{{ t('common.close') }}</span>
+                  <span class="font-mono font-medium tabular-nums">{{ formatCurrency(data.close) }}</span>
+                </div>
+                <div v-if="data.ma20" class="flex items-center justify-between gap-2">
+                  <span class="text-muted-foreground">MA 20</span>
+                  <span class="font-mono font-medium tabular-nums">{{ formatCurrency(data.ma20) }}</span>
+                </div>
+                <div v-if="data.ma50" class="flex items-center justify-between gap-2">
+                  <span class="text-muted-foreground">MA 50</span>
+                  <span class="font-mono font-medium tabular-nums">{{ formatCurrency(data.ma50) }}</span>
+                </div>
+                <div v-if="data.bb_upper" class="flex items-center justify-between gap-2">
+                  <span class="text-muted-foreground">BB Upper</span>
+                  <span class="font-mono font-medium tabular-nums">{{ formatCurrency(data.bb_upper) }}</span>
+                </div>
+                <div v-if="data.bb_lower" class="flex items-center justify-between gap-2">
+                  <span class="text-muted-foreground">BB Lower</span>
+                  <span class="font-mono font-medium tabular-nums">{{ formatCurrency(data.bb_lower) }}</span>
+                </div>
+              </div>
+            </template>
+          </VisTooltip>
+        </VisXYContainer>
+
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: chartConfig.price.color }" />
+            <span class="text-muted-foreground text-sm">{{ t('common.close') }}</span>
+          </div>
+          <div v-if="showMA20" class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: chartConfig.ma20.color }" />
+            <span class="text-muted-foreground text-sm">MA 20</span>
+          </div>
+          <div v-if="showMA50" class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: chartConfig.ma50.color }" />
+            <span class="text-muted-foreground text-sm">MA 50</span>
+          </div>
+          <div v-if="showBB" class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full border border-dashed" :style="{ backgroundColor: chartConfig.bb.color }" />
+            <span class="text-muted-foreground text-sm">{{ t('indicators.bollinger') }}</span>
+          </div>
+        </div>
+      </ChartContainer>
+    </CardContent>
+  </Card>
 </template>
 
-<script setup>
-import { ref, onMounted, watch, onUnmounted, computed } from 'vue'
-import { createChart } from 'lightweight-charts'
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { VisArea, VisAxis, VisLine, VisXYContainer, VisTooltip } from '@unovis/vue'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { useThemeStore } from '@/stores/theme'  // Importiere den Theme-Store
+import {
+  ChartContainer,
+  type ChartConfig
+} from '@/components/ui/chart'
 
-const props = defineProps({
-  data: {
-    type: Array,
-    default: () => []
+interface DataPoint {
+  date: Date
+  close: number
+  ma20?: number
+  ma50?: number
+  bb_upper?: number
+  bb_lower?: number
+}
+
+const props = defineProps<{
+  data: Array<{
+    timestamp: string
+    open: number
+    high: number
+    low: number
+    close: number
+    volume?: number
+  }>
+  technicalData?: {
+    current?: {
+      sma_20?: number
+      sma_50?: number
+      sma_200?: number
+      bb_upper?: number
+      bb_lower?: number
+      bb_middle?: number
+    }
+    historical?: {
+      sma_20?: Record<string, number>
+      sma_50?: Record<string, number>
+      bb_upper?: Record<string, number>
+      bb_lower?: Record<string, number>
+      bb_middle?: Record<string, number>
+    }
+  }
+  symbol?: string
+  timeframe?: string
+  currency?: string
+  currencySymbol?: string
+}>()
+
+const { t } = useI18n()
+const currencySymbol = props.currencySymbol || '$'
+
+const showMA20 = ref(true)
+const showMA50 = ref(true)
+const showBB = ref(false) // Default off for less clutter
+
+const chartConfig: ChartConfig = {
+  price: {
+    label: 'Price',
+    color: 'var(--chart-1)'
   },
-  technicalData: {
-    type: Object,
-    default: () => ({})
+  ma20: {
+    label: 'MA 20',
+    color: 'var(--chart-2)'
+  },
+  ma50: {
+    label: 'MA 50',
+    color: 'var(--chart-3)'
+  },
+  bb: {
+    label: 'Bollinger Bands',
+    color: 'var(--chart-4)'
   }
-})
-
-const chartRef = ref(null)
-const chart = ref(null)
-const candlestickSeries = ref(null)
-const series = ref({})
-
-const indicators = ref([
-  { name: 'MA20', active: true, color: '#2196F3' },
-  { name: 'MA50', active: true, color: '#FF9800' },
-  { name: 'BB Upper', active: true, color: '#4CAF50' },
-  { name: 'BB Lower', active: true, color: '#4CAF50' }
-])
-
-const themeStore = useThemeStore() // Verwende den Theme-Store
-const isDark = computed(() => themeStore.isDark) // Reaktive Variable für das aktuelle Theme
-
-const initChart = () => {
-  const chartOptions = {
-    layout: {
-      textColor: isDark.value ? 'white' : 'black',
-      background: { type: 'solid', color: isDark.value ? 'black' : 'white' }
-    },
-    grid: {
-      vertLines: { color: isDark.value ? '#444444' : '#e6e6e6' },
-      horzLines: { color: isDark.value ? '#444444' : '#e6e6e6' }
-    },
-    crosshair: {
-      mode: 1,
-      vertLine: {
-        color: '#2962FF',
-        width: 0.5,
-        style: 1,
-        visible: true,
-        labelVisible: true
-      },
-      horzLine: {
-        color: '#2962FF',
-        width: 0.5,
-        style: 1,
-        visible: true,
-        labelVisible: true
-      }
-    }
-  }
-
-  chart.value = createChart(chartRef.value, chartOptions)
-
-  // Candlestick Series
-  candlestickSeries.value = chart.value.addCandlestickSeries({
-    upColor: '#26a69a',
-    downColor: '#ef5350',
-    borderVisible: false,
-    wickUpColor: '#26a69a',
-    wickDownColor: '#ef5350'
-  })
-
-  // Initialize Technical Indicators
-  series.value = {
-    MA20: chart.value.addLineSeries({
-      color: '#2196F3',
-      lineWidth: 1,
-      visible: true
-    }),
-    MA50: chart.value.addLineSeries({
-      color: '#FF9800',
-      lineWidth: 1,
-      visible: true
-    }),
-    'BB Upper': chart.value.addLineSeries({
-      color: '#4CAF50',
-      lineWidth: 1,
-      lineStyle: 1, // Dashed
-      visible: true
-    }),
-    'BB Lower': chart.value.addLineSeries({
-      color: '#4CAF50',
-      lineWidth: 1,
-      lineStyle: 1, // Dashed
-      visible: true
-    })
-  }
-
-  updateChartData()
 }
 
-// Funktion zur Berechnung des gleitenden Durchschnitts
-const calculateMA = (data, period) => {
-  return data.map((item, index) => {
-    if (index < period - 1) return null
-    const slice = data.slice(index - period + 1, index + 1)
-    const sum = slice.reduce((acc, val) => acc + val.close, 0)
+const svgDefs = `
+  <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="5%" stop-color="var(--chart-1)" stop-opacity="0.5" />
+    <stop offset="95%" stop-color="var(--chart-1)" stop-opacity="0" />
+  </linearGradient>
+`
+
+const chartData = computed((): DataPoint[] => {
+  if (!props.data?.length) return []
+
+  const historical = props.technicalData?.historical || {}
+
+  // Debug: log historical data
+  if (historical.sma_20 && Object.keys(historical.sma_20).length > 0) {
+    console.log('[PriceChart] Historical SMA20 data:', Object.keys(historical.sma_20).slice(0, 3), '...', Object.values(historical.sma_20).slice(0, 3))
+  }
+
+  return props.data.map(item => {
+    const ts = Math.floor(new Date(item.timestamp).getTime() / 1000)
+    const tsStr = String(ts)
+    const ma20 = historical.sma_20?.[ts] ?? historical.sma_20?.[tsStr]
+    const ma50 = historical.sma_50?.[ts] ?? historical.sma_50?.[tsStr]
+    const bb_upper = historical.bb_upper?.[ts] ?? historical.bb_upper?.[tsStr]
+    const bb_lower = historical.bb_lower?.[ts] ?? historical.bb_lower?.[tsStr]
+
+    // Debug: log first match
+    if (item === props.data[0]) {
+      console.log('[PriceChart] First data point:', { ts, tsStr, ma20, ma50, bb_upper, bb_lower })
+    }
+
     return {
-      time: new Date(item.timestamp).getTime() / 1000,
-      value: sum / period
+      date: new Date(item.timestamp),
+      close: item.close,
+      ma20,
+      ma50,
+      bb_upper,
+      bb_lower
     }
-  }).filter(item => item !== null)
-}
-
-// Indikator umschalten
-const toggleIndicator = (indicator) => {
-  indicator.active = !indicator.active
-  if (series.value[indicator.name]) {
-    series.value[indicator.name].applyOptions({
-      visible: indicator.active
-    })
-  }
-}
-
-// Chart-Daten aktualisieren
-const updateChartData = () => {
-  if (!chart.value || !props.data.length) return
-
-  // Update Candlesticks
-  const candleData = props.data.map(item => ({
-    time: new Date(item.timestamp).getTime() / 1000,
-    open: item.open,
-    high: item.high,
-    low: item.low,
-    close: item.close
-  }))
-  candlestickSeries.value.setData(candleData)
-
-  // Update MA20
-  const ma20Data = calculateMA(props.data, 20)
-  series.value['MA20'].setData(ma20Data)
-
-  // Update MA50
-  const ma50Data = calculateMA(props.data, 50)
-  series.value['MA50'].setData(ma50Data)
-
-  // Update Bollinger Bands
-  const bbData = props.data.map(item => {
-    const timestamp = new Date(item.timestamp).getTime() / 1000
-    return {
-      upper: {
-        time: timestamp,
-        value: props.technicalData?.historical?.[item.timestamp]?.bb_upper ||
-               props.technicalData?.current?.bb_upper
-      },
-      lower: {
-        time: timestamp,
-        value: props.technicalData?.historical?.[item.timestamp]?.bb_lower ||
-               props.technicalData?.current?.bb_lower
-      }
-    }
-  })
-
-  series.value['BB Upper'].setData(bbData.map(d => d.upper).filter(item => item.value !== undefined))
-  series.value['BB Lower'].setData(bbData.map(d => d.lower).filter(item => item.value !== undefined))
-
-  chart.value.timeScale().fitContent()
-}
-
-// Überwachung von Theme-Änderungen
-watch(isDark, (newVal) => {
-  const newOptions = {
-    layout: {
-      textColor: newVal ? 'white' : 'black',
-      background: { type: 'solid', color: newVal ? 'black' : 'white' }
-    },
-    grid: {
-      vertLines: { color: newVal ? '#444444' : '#e6e6e6' },
-      horzLines: { color: newVal ? '#444444' : '#e6e6e6' }
-    }
-  }
-  chart.value.applyOptions(newOptions) // Wenden Sie die neuen Optionen an
+  }).filter(d => d.close !== undefined)
 })
 
-// Initialisieren des Charts
-onMounted(() => {
-  initChart()
-})
-
-// Überwachen von Datenänderungen
-watch(() => props.data, () => {
-  updateChartData()
-}, { deep: true })
-
-watch(() => props.technicalData, () => {
-  updateChartData()
-}, { deep: true })
-
-// Aufräumen bei der Zerstörung der Komponente
-onUnmounted(() => {
-  if (chart.value) {
-    chart.value.remove()
+function formatCurrency(value: number): string {
+  if (value >= 1000) {
+    return `${currencySymbol}${value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`
   }
-})
+  return `${currencySymbol}${value.toFixed(2)}`
+}
 </script>
