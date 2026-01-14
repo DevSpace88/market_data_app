@@ -104,7 +104,7 @@ export default {
 
     const fetchWatchlist = async () => {
       try {
-        const response = await fetch('/api/v1/watchlist/with-data', {
+        const response = await fetch('/api/v1/watchlist/with-data/', {
           headers: {
             'Authorization': `Bearer ${authStore.token}`
           }
@@ -156,7 +156,7 @@ export default {
 
     const removeFromWatchlist = async (watchlistId) => {
       try {
-        const response = await fetch(`/api/v1/watchlist/${watchlistId}`, {
+        const response = await fetch(`/api/v1/watchlist/${watchlistId}/`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${authStore.token}`

@@ -111,7 +111,7 @@ const fetchCustomWatchlist = async () => {
   
   try {
     isLoading.value = true
-    const response = await axios.get('/api/v1/watchlist', {
+    const response = await axios.get('/api/v1/watchlist/', {
       headers: {
         'Authorization': `Bearer ${authStore.token}`
       }
@@ -391,7 +391,7 @@ const removeFromWatchlist = async (symbol) => {
   if (!authStore.isAuthenticated) return
   
   try {
-    await axios.delete(`/api/v1/watchlist/${symbol}`, {
+    await axios.delete(`/api/v1/watchlist/symbol/${symbol}/`, {
       headers: {
         'Authorization': `Bearer ${authStore.token}`
       }

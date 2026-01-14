@@ -184,7 +184,7 @@ const toggleWatchlist = async () => {
   try {
     if (isInWatchlist.value) {
       // Remove from watchlist
-      const response = await fetch(`/api/v1/watchlist/${watchlistItemId.value}`, {
+      const response = await fetch(`/api/v1/watchlist/${watchlistItemId.value}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${authStore.token}`
