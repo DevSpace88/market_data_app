@@ -86,7 +86,9 @@ async function handleLogin() {
         </form>
         <Alert class="mt-4">
           <AlertDescription>
-            <strong>Testdaten:</strong> Benutzername: <code>admin</code>, Passwort: <code>admin123</code>
+            <p><strong>Testdaten:</strong></p>
+            <p>Benutzername: <code>admin</code></p>
+            <p>Passwort: <code>admin123</code></p>
           </AlertDescription>
         </Alert>
       </CardContent>
