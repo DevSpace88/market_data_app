@@ -49,6 +49,15 @@
             @timeframe-change="handleTimeframeChange"
         />
       </div>
+
+      <!-- Investment Decision Engine -->
+      <div class="lg:col-span-2">
+        <InvestmentDashboard
+          :decision-data="decisionData"
+          :is-loading="isInvestmentLoading"
+        />
+      </div>
+
       <TechnicalIndicators
           :data="technicalIndicators?.current"
           :currency="marketStore.currency"
@@ -76,6 +85,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useMarketStore } from '@/stores/market'
 import { useAuthStore } from '@/stores/auth'
+import { useInvestmentDecision } from '@/composables/useInvestmentEngine'
 import { Loader2 } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import TimeframeSelector from '@/components/TimeframeSelector.vue'
@@ -86,6 +96,7 @@ import PatternList from '@/components/PatternList.vue'
 import RiskMetrics from '@/components/RiskMetrics.vue'
 import AIAnalysis from '@/components/AIAnalysis.vue'
 import ConnectionStatus from '@/components/ConnectionStatus.vue'
+import InvestmentDashboard from '@/components/investment/InvestmentDashboard.vue'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -93,6 +104,13 @@ const marketStore = useMarketStore()
 const authStore = useAuthStore()
 const timeframe = ref('1Y')
 const selectedIndicators = ref(['sma_20', 'sma_50', 'bb_upper', 'bb_lower', 'bb_middle'])
+
+// Investment Decision Engine
+const {
+  decisionData,
+  isLoading: isInvestmentLoading,
+  fetchInvestmentDecision
+} = useInvestmentDecision()
 
 // Watchlist state
 const isInWatchlist = ref(false)
@@ -150,6 +168,28 @@ const fetchData = async () => {
   await marketStore.loadMarketAnalysis(symbol.value, timeframe.value)
   // Check watchlist status for new symbol
   await checkWatchlistStatus()
+  // Load Investment Decision Engine data
+  try {
+    // Map frontend timeframe to API timeframe format
+    const timeframeMap = {
+      '1D': '1D',
+      '1W': '1W',
+      '1M': '1M',
+      '3M': '3M',
+      '6M': '6M',
+      '1Y': '1Y',
+      'YTD': 'YTD'
+    }
+
+    await fetchInvestmentDecision(symbol.value, {
+      timeframe: timeframeMap[timeframe.value] || '1Y',
+      includeSentiment: true,
+      includeActivity: true
+    })
+  } catch (err) {
+    console.error('Failed to load investment decision data:', err)
+    // Continue without investment data - it's optional
+  }
 }
 
 const formatNumber = (num) => {
