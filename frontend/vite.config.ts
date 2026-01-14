@@ -1,17 +1,3 @@
-// import { defineConfig } from 'vite'
-// import vue from '@vitejs/plugin-vue'
-// import path from 'path'
-//
-// export default defineConfig({
-//   plugins: [vue()],
-//   resolve: {
-//     alias: {
-//       '@': path.resolve(__dirname, './src')
-//     }
-//   }
-// })
-
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
@@ -26,12 +12,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8000',
         changeOrigin: true,
         ws: true
       },
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: process.env.VITE_API_BASE_URL?.replace('http', 'ws') || 'ws://localhost:8000',
         ws: true,
         changeOrigin: true
       }
@@ -39,7 +25,7 @@ export default defineConfig({
   },
   preview: {
     host: '0.0.0.0',
-    port: process.env.PORT || 3000
+    port: parseInt(process.env.PORT || '3000')
   },
   build: {
     outDir: 'dist',

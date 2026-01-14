@@ -6,18 +6,28 @@ from langchain_community.chat_models import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.llms import Ollama
 from langchain_core.messages import HumanMessage, SystemMessage
+from sqlalchemy.orm import Session
 import logging
+
+from .api_token_service import APITokenService
 
 logger = logging.getLogger(__name__)
 
+
 class AIProviderService:
+    """
+    Service for interacting with AI providers.
+
+    API keys are decrypted by the APITokenService before being passed to this service.
+    This service only works with raw, decrypted API keys.
+    """
+
     def __init__(self):
-        # No encryption for API keys; keys are stored in plaintext as requested
         # Simple in-memory cache for structured analyses
         self._analysis_cache: Dict[str, Dict[str, Any]] = {}
         self._analysis_cache_ts: Dict[str, float] = {}
         self._analysis_cache_ttl_seconds: int = 60 * 60 * 24  # 24 hours
-    
+
     def get_llm(self, provider: str, model: str, api_key: str, temperature: float = 0.7, max_tokens: int = 1000):
         """Get configured LLM instance based on provider"""
         try:
@@ -33,7 +43,7 @@ class AIProviderService:
                 return ChatOpenAI(
                     model=model,
                     openai_api_key=api_key,
-                    openai_api_base="https://api.deepseek.com/v1",
+                    openai_api_base="https://api.deepseek.com",
                     temperature=temperature,
                     max_tokens=max_tokens
                 )
@@ -63,14 +73,16 @@ class AIProviderService:
         except Exception as e:
             logger.error(f"Failed to initialize LLM for provider {provider}: {e}")
             raise
-    
-    async def analyze_market_data(self, symbol: str, market_data: Dict[str, Any], 
-                                provider: str, model: str, api_key: str, 
-                                temperature: float = 0.7, max_tokens: int = 1000) -> str:
+
+    async def analyze_market_data(
+        self, symbol: str, market_data: Dict[str, Any],
+        provider: str, model: str, api_key: str,
+        temperature: float = 0.7, max_tokens: int = 1000
+    ) -> str:
         """Analyze market data using specified AI provider"""
         try:
             llm = self.get_llm(provider, model, api_key, temperature=temperature, max_tokens=max_tokens)
-            
+
             # Prepare market data context
             context = f"""
             Symbol: {symbol}
@@ -80,31 +92,31 @@ class AIProviderService:
             Market Cap: ${market_data.get('market_cap', 'N/A'):,}
             P/E Ratio: {market_data.get('pe_ratio', 'N/A')}
             """
-            
+
             if 'chart_data' in market_data:
                 chart_trend = "rising" if market_data['chart_data'][-1] > market_data['chart_data'][0] else "falling"
                 context += f"\nChart Trend: {chart_trend}"
-            
+
             # Create analysis prompt
             system_prompt = """You are a professional financial analyst. Analyze the provided market data and give a concise, actionable analysis. Focus on:
             1. Key trends and patterns
             2. Technical indicators
             3. Risk assessment
             4. Investment recommendation (buy/hold/sell)
-            
+
             Keep the analysis under 200 words and use professional financial terminology."""
-            
+
             human_prompt = f"Please analyze this market data:\n\n{context}"
-            
+
             # Generate analysis
             messages = [
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=human_prompt)
             ]
-            
+
             response = await llm.ainvoke(messages)
             return response.content
-            
+
         except Exception as e:
             logger.error(f"AI analysis failed for {symbol}: {e}")
             return f"Analysis temporarily unavailable. Error: {str(e)}"
@@ -253,16 +265,16 @@ class AIProviderService:
                 "risk_factors": [],
                 "short_term_outlook": "",
             }
-    
+
     def test_api_connection(self, provider: str, model: str, api_key: str) -> Dict[str, Any]:
         """Test API connection for a provider"""
         try:
             llm = self.get_llm(provider, model, api_key, temperature=0.1, max_tokens=50)
-            
+
             # Simple test message
             test_message = HumanMessage(content="Hello, please respond with 'Connection successful'")
             response = llm.invoke([test_message])
-            
+
             return {
                 "success": True,
                 "message": "Connection successful",
@@ -275,6 +287,7 @@ class AIProviderService:
                 "message": f"Connection failed: {str(e)}",
                 "error": str(e)
             }
+
 
 # Global instance
 ai_provider_service = AIProviderService()

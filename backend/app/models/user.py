@@ -17,13 +17,17 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
-    
+
     # AI Provider Settings
-    ai_provider = Column(String, default="openai")  # openai, deepseek, anthropic, etc.
-    ai_api_key = Column(Text, nullable=True)  # Encrypted API key
-    ai_model = Column(String, default="gpt-3.5-turbo")  # Model name
+    ai_provider = Column(String, default="deepseek")  # openai, deepseek, anthropic, etc.
+    ai_api_key = Column(Text, nullable=True)  # Encrypted API key (legacy, for migration)
+    api_key_token = Column(String, unique=True, nullable=True, index=True)  # Reference token for encrypted key
+    ai_model = Column(String, default="deepseek-chat")  # Model name
     ai_temperature = Column(String, default="0.7")  # Temperature setting
     ai_max_tokens = Column(Integer, default=1000)  # Max tokens
+
+    # Security
+    must_change_password = Column(Boolean, default=False)  # Force password change on next login
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

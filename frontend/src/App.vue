@@ -30,7 +30,9 @@ import Main from '@/layouts/Main.vue'
 const authStore = useAuthStore()
 
 onMounted(async () => {
-  if (authStore.token) {
+  // Check if we have a token in localStorage (before loading from store)
+  const hasStoredToken = localStorage.getItem('auth_token')
+  if (hasStoredToken || authStore.token) {
     await authStore.checkAuth()
   }
 })
