@@ -73,6 +73,7 @@ from .api.routes.market_analysis import router as market_analysis_router
 from .api.routes.websocket import router as websocket_router
 from .api.routes.auth import router as auth_router
 from .api.routes.market import router as market_router
+from .api.routes.investment_engine import router as investment_engine_router
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(watchlist_router, prefix="/api/v1/watchlist", tags=["watchlist"])
@@ -81,6 +82,7 @@ app.include_router(ai_settings_router, prefix="/api/v1/ai-settings", tags=["ai-s
 app.include_router(market_analysis_router, prefix="/api/v1/market", tags=["market-analysis"])
 app.include_router(websocket_router, prefix="/api/v1/ws", tags=["websocket"])
 app.include_router(market_router, prefix="/api/v1/market", tags=["market"])
+app.include_router(investment_engine_router, prefix="/api/v1", tags=["investment-engine"])
 app.include_router(api_router, prefix=settings.API_PREFIX)
 
 # Health check endpoint
