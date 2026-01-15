@@ -75,22 +75,40 @@
         <div v-if="data.top_headlines.length > 0" class="space-y-3 pt-4 border-t">
           <h4 class="text-sm font-medium">Top Headlines</h4>
           <div class="space-y-2">
-            <button
+            <div
               v-for="(headline, idx) in data.top_headlines"
               :key="idx"
-              @click="selectedHeadline = headline"
-              class="w-full text-left p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+              class="flex items-center gap-2 p-3 rounded-md bg-muted/50"
             >
-              <div class="text-sm line-clamp-2">{{ headline.title }}</div>
-              <div class="flex items-center justify-between mt-2">
-                <Badge variant="outline" size="sm">
-                  {{ headline.sentiment_contribution }}
-                </Badge>
-                <span v-if="headline.timestamp" class="text-xs text-muted-foreground">
-                  {{ new Date(headline.timestamp).toLocaleDateString() }}
-                </span>
+              <div class="flex-1 min-w-0">
+                <a
+                  :href="headline.link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-sm line-clamp-2 hover:underline"
+                >
+                  {{ headline.title }}
+                </a>
+                <div class="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" size="sm">
+                    {{ headline.sentiment_contribution }}
+                  </Badge>
+                  <span v-if="headline.timestamp" class="text-xs text-muted-foreground">
+                    {{ new Date(headline.timestamp).toLocaleDateString() }}
+                  </span>
+                </div>
               </div>
-            </button>
+              <Button
+                as="a"
+                :href="headline.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                size="sm"
+                variant="ghost"
+              >
+                <ExternalLinkIcon class="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -124,26 +142,17 @@
       <div v-else class="py-8 text-center text-muted-foreground">
         No sentiment data available
       </div>
-
-    <!-- News Article Dialog -->
-    <NewsArticleDialog
-      v-if="selectedHeadline"
-      :article-url="selectedHeadline.link"
-      :title="selectedHeadline.title"
-      @close="selectedHeadline = null"
-    />
     </CardContent>
   </Card>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { InfoIcon } from 'lucide-vue-next'
+import { InfoIcon, ExternalLinkIcon } from 'lucide-vue-next'
 import { Loader2 } from 'lucide-vue-next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import NewsArticleDialog from './NewsArticleDialog.vue'
 import type { SentimentData } from '@/composables/useInvestmentEngine'
 
 interface Props {
@@ -152,8 +161,6 @@ interface Props {
 }
 
 defineProps<Props>()
-
-const selectedHeadline = ref(null)
 
 const getSentimentColorClass = (score: number) => {
   if (score >= 60) return 'text-green-600 dark:text-green-400'
